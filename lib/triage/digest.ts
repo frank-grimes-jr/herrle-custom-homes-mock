@@ -1,0 +1,151 @@
+import "server-only";
+import Anthropic from "@anthropic-ai/sdk";
+import type { Bucket, Digest, DigestItem, Email, Period } from "./types";
+import { SECTION_TITLES } from "./types";
+import { buildSampleDigest, rawInbox } from "./mock";
+
+// Hybrid: with an ANTHROPIC_API_KEY, Claude writes the digest; otherwise (or on
+// any failure) the deterministic sample renders so the page always works.
+// Successful Claude results are cached per period so we don't re-bill on reload.
+const cache = new Map<Period, Digest>();
+
+export async function getDigest(period: Period): Promise<Digest> {
+  const cached = cache.get(period);
+  if (cached) return cached;
+
+  if (process.env.ANTHROPIC_API_KEY) {
+    try {
+      const digest = await generateWithClaude(period);
+      cache.set(period, digest); // only cache real successes → transient errors can retry
+      return digest;
+    } catch (err) {
+      console.error("[triage] Claude digest failed; falling back to sample:", err);
+    }
+  }
+  return buildSampleDigest(period);
+}
+
+const SYSTEM = `You are the chief of staff for Dave Herrle, owner of Herrle Custom Homes, a small high-craft custom home builder on the Connecticut shoreline. You triage his inbox three times a day and brief him like a sharp, trusted right hand — not an inbox manager.
+
+Your job is to INTERPRET, not list. Read the emails and tell Dave what actually matters: who needs him, who's unhappy, what decision is waiting, what can wait. Connect related threads (e.g. a client complaint and the vendor delay that caused it). Be direct and plain-spoken. Recommend a concrete next action wherever one is warranted.
+
+Sort every email into exactly one bucket:
+- "needs_you": needs Dave's action, decision, or reply.
+- "sentiment": notable tone (especially a frustrated or worried client) he should be aware of, even if no action is strictly required.
+- "fyi": informational or easily handled/delegated.
+
+Return ONLY valid JSON (no markdown, no prose outside the JSON) in exactly this shape:
+{
+  "headline": "2-4 sentence narrative brief for this time of day — lead with what needs him most",
+  "sections": [
+    {
+      "key": "needs_you" | "sentiment" | "fyi",
+      "items": [
+        {
+          "emailId": "<the email id>",
+          "sentiment": "positive" | "neutral" | "negative",
+          "urgency": "high" | "medium" | "low",
+          "summary": "one line interpreting the email — not the subject echoed back",
+          "suggestedAction": "concrete next step (omit if genuinely none)"
+        }
+      ]
+    }
+  ]
+}`;
+
+function userPrompt(period: Period, emails: Email[]): string {
+  return `Time of day: ${period}. Here are the emails since the last brief:\n\n${JSON.stringify(
+    emails,
+    null,
+    2,
+  )}\n\nWrite Dave's ${period} brief as JSON.`;
+}
+
+async function generateWithClaude(period: Period): Promise<Digest> {
+  const emails = rawInbox(period);
+  const client = new Anthropic();
+  const res = await client.messages.create({
+    model: "claude-opus-5",
+    max_tokens: 4000,
+    thinking: { type: "adaptive" },
+    output_config: { effort: "medium" },
+    system: SYSTEM,
+    messages: [{ role: "user", content: userPrompt(period, emails) }],
+  });
+
+  const text = res.content
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("")
+    .trim();
+
+  const parsed = extractJson(text);
+  return normalize(period, parsed, emails);
+}
+
+// Tolerate stray prose or ```json fences around the JSON object.
+function extractJson(text: string): unknown {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start === -1 || end === -1) throw new Error("no JSON object in model output");
+  return JSON.parse(text.slice(start, end + 1));
+}
+
+// Coerce model output into a Digest, backfilling from/subject/project from the
+// source emails. Throws if the shape is unusable (→ caller falls back to sample).
+function normalize(period: Period, raw: unknown, emails: Email[]): Digest {
+  const data = raw as { headline?: unknown; sections?: unknown };
+  if (typeof data.headline !== "string" || !Array.isArray(data.sections)) {
+    throw new Error("model output missing headline/sections");
+  }
+  const byId = new Map(emails.map((e) => [e.id, e]));
+  const order: Bucket[] = ["needs_you", "sentiment", "fyi"];
+
+  const sections = order
+    .map((key) => {
+      const raw = (data.sections as Array<{ key?: string; items?: unknown }>).find((s) => s.key === key);
+      const items: DigestItem[] = Array.isArray(raw?.items)
+        ? (raw!.items as Array<Record<string, unknown>>)
+            .map((it): DigestItem | null => {
+              const src = byId.get(String(it.emailId));
+              if (!src) return null;
+              return {
+                emailId: src.id,
+                from: src.from,
+                subject: src.subject,
+                project: src.project,
+                sentiment: coerce(it.sentiment, ["positive", "neutral", "negative"], "neutral"),
+                urgency: coerce(it.urgency, ["high", "medium", "low"], "medium"),
+                summary: typeof it.summary === "string" ? it.summary : src.subject,
+                suggestedAction:
+                  typeof it.suggestedAction === "string" && it.suggestedAction.trim()
+                    ? it.suggestedAction
+                    : undefined,
+              };
+            })
+            .filter((x): x is DigestItem => x !== null)
+        : [];
+      return { key, title: SECTION_TITLES[key], items };
+    })
+    .filter((s) => s.items.length > 0);
+
+  const all = sections.flatMap((s) => s.items);
+  if (all.length === 0) throw new Error("model output produced no usable items");
+
+  return {
+    period,
+    generatedAt: new Date().toISOString(),
+    source: "claude",
+    headline: data.headline,
+    counts: {
+      total: emails.length,
+      needsYou: sections.find((s) => s.key === "needs_you")?.items.length ?? 0,
+      flagged: all.filter((i) => i.sentiment === "negative").length,
+    },
+    sections,
+  };
+}
+
+function coerce<T extends string>(v: unknown, allowed: T[], fallback: T): T {
+  return typeof v === "string" && (allowed as string[]).includes(v) ? (v as T) : fallback;
+}

@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+/* Herrle Custom Homes — brand tokens.
+   Warm, material-honest palette (linen, oak, stone, forest green, warm charcoal).
+   Colors are defined as raw vars in :root and swapped for dark; @theme maps them
+   to Tailwind utilities (bg-canvas, text-ink, text-primary, border-line, ...). */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-oak: var(--oak);
+  --color-stone: var(--stone);
+  --color-sage: var(--sage);
+  --color-amber: var(--amber);
+  --color-terracotta: var(--terracotta);
+  --font-serif: var(--font-fraunces);
+  --font-sans: var(--font-inter);
+}
+
+:root {
+  --canvas: #f4efe4;
+  --surface: #fdfbf6;
+  --surface-2: #efe8d9;
+  --line: #e4dcc9;
+  --ink: #2a2620;
+  --muted: #6f6857;
+  --primary: #33463a;
+  --oak: #a9865a;
+  --stone: #8c8578;
+  --sage: #5f7a5a;
+  --amber: #b4842b;
+  --terracotta: #a9552f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: #17150f;
+    --surface: #201d16;
+    --surface-2: #2a261d;
+    --line: #35302a;
+    --ink: #ece6d8;
+    --muted: #a79e88;
+    --primary: #86a98c;
+    --oak: #c6a277;
+    --stone: #9a9384;
+    --sage: #7fa07a;
+    --amber: #d2a24a;
+    --terracotta: #ce7a55;
+  }
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "tnum" 1; /* tabular figures for aligned numbers */
+}
