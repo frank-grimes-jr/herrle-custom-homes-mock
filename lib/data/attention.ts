@@ -4,6 +4,7 @@ import type {
   Financials,
   Project,
   SignatureDoc,
+  Sub,
   Team,
 } from "./types";
 
@@ -13,6 +14,7 @@ export type AttentionInput = {
   clients: Client[];
   team: Team;
   signatures: SignatureDoc[];
+  subs: Sub[];
 };
 
 // Tunable thresholds. These are the knobs to calibrate with Dave later —
@@ -23,8 +25,9 @@ export const THRESHOLDS = {
   marginFadeWatch: 3,
   allowanceOverWatch: 10_000, // a selection over its allowance by this much → watch
   arOver90Escalate: 50_000, // $ aged past 90 days
-  runwayMonthsEscalate: 1.5,
-  runwayMonthsWatch: 3,
+  cashFloorEscalate: 100_000, // projected weekly balance dips below this → escalate
+  cashFloorWatch: 300_000,
+  coiExpiryWarnDays: 14, // sub insurance expiring within this window → watch
   marginBelowTargetWatch: 5, // points below target margin
   marginBelowTargetEscalate: 10,
   signaturePendingWatchDays: 7,
@@ -43,6 +46,9 @@ const money = (n: number) =>
     maximumFractionDigits: 1,
   }).format(n);
 
+const shortDate = (iso: string) =>
+  new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(iso));
+
 export function deriveAttention(d: AttentionInput): AttentionItem[] {
   const items: AttentionItem[] = [];
   const push = (i: AttentionItem) => items.push(i);
@@ -59,24 +65,17 @@ export function deriveAttention(d: AttentionInput): AttentionItem[] {
       detail: `${money(f.ar.over90)} outstanding over 90 days — collect or escalate.`,
     });
   }
-  const months = f.monthlyBurn <= 0 ? Infinity : f.cashOnHand / f.monthlyBurn;
-  if (months < T.runwayMonthsEscalate) {
-    push({
-      id: "fin-runway",
-      severity: "escalate",
-      domain: "Financials",
-      title: "Cash runway is short",
-      detail: `~${months.toFixed(1)} months of operating cash at current burn.`,
-    });
-  } else if (months < T.runwayMonthsWatch) {
-    push({
-      id: "fin-runway",
-      severity: "watch",
-      domain: "Financials",
-      title: "Cash runway tightening",
-      detail: `~${months.toFixed(1)} months of operating cash — watch draw schedule.`,
-    });
+  // Cash-flow forecast: flag the coming low point (supersedes a raw runway ratio).
+  if (f.cashForecast.length > 0) {
+    let min = f.cashForecast[0];
+    for (const w of f.cashForecast) if (w.balance < min.balance) min = w;
+    if (min.balance < T.cashFloorEscalate) {
+      push({ id: "fin-cashgap", severity: "escalate", domain: "Financials", title: "Cash gap coming", detail: `Projected to dip to ${money(min.balance)} the week of ${min.label} — line up a draw now.`, href: "/cash" });
+    } else if (min.balance < T.cashFloorWatch) {
+      push({ id: "fin-cashgap", severity: "watch", domain: "Financials", title: "Cash gets tight soon", detail: `Dips to about ${money(min.balance)} the week of ${min.label} — time a draw or a bill.`, href: "/cash" });
+    }
   }
+
   const marginGap = f.targetMarginPct - f.grossMarginPct;
   if (marginGap >= T.marginBelowTargetEscalate) {
     push({
@@ -202,6 +201,30 @@ export function deriveAttention(d: AttentionInput): AttentionItem[] {
       domain: "Team",
       title: `${idle} software seat${idle > 1 ? "s" : ""} sitting idle`,
       detail: `Only ${d.team.claudeSeatsActive} of ${d.team.claudeSeats} seats were active this week — you're paying for tools no one's using.`,
+    });
+  }
+
+  // — Compliance (sub insurance & lien waivers) — one line per sub, worst issue.
+  const now = Date.now();
+  const day = 86_400_000;
+  for (const s of d.subs) {
+    const issues: { severity: "escalate" | "watch"; text: string }[] = [];
+    const daysToExpiry = (new Date(s.coiExpires).getTime() - now) / day;
+    if (daysToExpiry < 0) issues.push({ severity: "escalate", text: `insurance expired ${shortDate(s.coiExpires)}` });
+    else if (daysToExpiry <= T.coiExpiryWarnDays) issues.push({ severity: "watch", text: `insurance expires ${shortDate(s.coiExpires)}` });
+    if (!s.lienWaiverCurrent) issues.push({ severity: "watch", text: "lien waiver outstanding" });
+    if (issues.length === 0) continue;
+    const top = issues.find((i) => i.severity === "escalate") ?? issues[0];
+    push({
+      id: `sub-${s.id}`,
+      severity: issues.some((i) => i.severity === "escalate") ? "escalate" : "watch",
+      domain: "Compliance",
+      title: `${s.name} — ${top.text}`,
+      detail:
+        issues.length > 1
+          ? `+${issues.length - 1} more · ${s.trade} on ${s.projects[0]}.`
+          : `${s.trade} on ${s.projects[0]}.`,
+      href: "/compliance",
     });
   }
 

@@ -30,6 +30,7 @@ export function FinancialsSection({ f }: { f: Financials }) {
           value={fmtUSD(f.cashOnHand, true)}
           sub={`~${runway.toFixed(1)} mo runway`}
           accent={runway < 3 ? "text-amber" : "text-ink"}
+          href="/cash"
         />
         <StatTile label="Backlog" value={fmtUSD(f.backlog, true)} sub="contracted future work" accent="text-primary" />
       </div>

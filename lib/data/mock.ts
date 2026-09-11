@@ -9,6 +9,7 @@ import type {
   Pipeline,
   Project,
   SignatureDoc,
+  Sub,
   Team,
   TeamMember,
   TrendPoint,
@@ -29,6 +30,16 @@ export const financials: Financials = {
   ap: { current: 210_000, overdue: 0 },
   revenueTrend: trend([420, 480, 510, 390, 460, 540, 610, 660, 700, 720, 690, 780].map((v) => v * 1000)),
   backlogTrend: trend([6.1, 6.4, 6.9, 7.2, 7.0, 7.6, 8.1, 8.4, 8.0, 8.7, 9.0, 9.2].map((v) => v * 1_000_000)),
+  cashForecast: [
+    { label: "Sep 15", inflow: 0, outflow: 400_000, balance: 850_000 },
+    { label: "Sep 22", inflow: 300_000, outflow: 450_000, balance: 700_000 },
+    { label: "Sep 29", inflow: 0, outflow: 520_000, balance: 180_000 }, // tightest week
+    { label: "Oct 6", inflow: 850_000, outflow: 400_000, balance: 630_000 },
+    { label: "Oct 13", inflow: 0, outflow: 380_000, balance: 250_000 },
+    { label: "Oct 20", inflow: 900_000, outflow: 420_000, balance: 730_000 },
+    { label: "Oct 27", inflow: 150_000, outflow: 360_000, balance: 520_000 },
+    { label: "Nov 3", inflow: 700_000, outflow: 440_000, balance: 780_000 },
+  ],
 };
 
 export const projects: Project[] = [
@@ -163,4 +174,13 @@ export const signatures: SignatureDoc[] = [
   { id: "contract-sill", title: "Sill Lane Estate — Construction Contract", type: "contract", project: "Sill Lane Estate", status: "pending", sentDaysAgo: 9, amount: 6_200_000 }, // watch
   { id: "co-salt1", title: "Saltmeadow — Allowance Addendum", type: "change_order", project: "Saltmeadow", status: "pending", sentDaysAgo: 3, amount: 38_000 },
   { id: "final-whip", title: "Whippoorwill — Final Payment Release", type: "proposal", project: "Whippoorwill Hollow", status: "signed", sentDaysAgo: 20, amount: 190_000 },
+];
+
+export const subs: Sub[] = [
+  { id: "shoreline-mason", name: "Shoreline Masonry", trade: "Masonry", coiExpires: "2026-08-28", lienWaiverCurrent: true, projects: ["Blackledge Point"] }, // COI EXPIRED → escalate
+  { id: "nardelli", name: "Nardelli Plumbing", trade: "Plumbing", coiExpires: "2026-09-30", lienWaiverCurrent: true, projects: ["Eightmile Ridge"] }, // expiring soon (page-amber)
+  { id: "cove-elec", name: "Cove Electric", trade: "Electrical", coiExpires: "2026-11-15", lienWaiverCurrent: true, projects: ["Saltmeadow", "Hawk's Nest Bluff"] },
+  { id: "oldlyme-drywall", name: "Old Lyme Drywall", trade: "Drywall", coiExpires: "2027-01-15", lienWaiverCurrent: true, projects: ["Hawk's Nest Bluff"] },
+  { id: "precision-hvac", name: "Precision HVAC", trade: "HVAC", coiExpires: "2026-12-01", lienWaiverCurrent: true, projects: ["Whippoorwill Hollow"] },
+  { id: "coastal-framing", name: "Coastal Framing", trade: "Framing", coiExpires: "2026-11-20", lienWaiverCurrent: true, projects: ["Saltmeadow"] },
 ];

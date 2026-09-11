@@ -18,11 +18,13 @@ function healthy(): AttentionInput {
       ap: { current: 50_000, overdue: 0 },
       revenueTrend: [],
       backlogTrend: [],
+      cashForecast: [],
     },
     projects: [],
     clients: [],
     team: { members: [], claudeSeats: 6, claudeSeatsActive: 6, claudeAdoptionTrend: [] },
     signatures: [],
+    subs: [],
   };
 }
 
@@ -47,12 +49,13 @@ test("AR over 90 days escalates", () => {
   assert.equal(deriveAttention(d).find((i) => i.id === "fin-ar90")!.severity, "escalate");
 });
 
-test("short cash runway escalates, tightening runway only watches", () => {
+test("a projected cash dip below the floor watches", () => {
   const d = healthy();
-  d.financials.monthlyBurn = 3_000_000; // runway 1 month
-  assert.equal(deriveAttention(d).find((i) => i.id === "fin-runway")!.severity, "escalate");
-  d.financials.monthlyBurn = 1_200_000; // runway 2.5 months
-  assert.equal(deriveAttention(d).find((i) => i.id === "fin-runway")!.severity, "watch");
+  d.financials.cashForecast = [
+    { label: "wk1", inflow: 0, outflow: 0, balance: 800_000 },
+    { label: "wk2", inflow: 0, outflow: 0, balance: 180_000 }, // below 300k floor
+  ];
+  assert.equal(deriveAttention(d).find((i) => i.id === "fin-cashgap")!.severity, "watch");
 });
 
 test("a healthy build produces no attention item", () => {
@@ -79,6 +82,18 @@ test("a late long-lead item escalates its build", () => {
     projects: [proj({ longLead: [{ label: "Windows", neededBy: "2026-09-15", eta: "2026-09-29", status: "late" }] })],
   });
   assert.equal(items.find((i) => i.id === "project-p1")!.severity, "escalate");
+});
+
+test("an expired sub insurance certificate escalates", () => {
+  const d = healthy();
+  d.subs = [{ id: "s1", name: "Acme Masonry", trade: "Masonry", coiExpires: "2020-01-01", lienWaiverCurrent: true, projects: ["Test Build"] }];
+  assert.equal(deriveAttention(d).find((i) => i.id === "sub-s1")!.severity, "escalate");
+});
+
+test("a missing lien waiver watches", () => {
+  const d = healthy();
+  d.subs = [{ id: "s2", name: "Acme Drywall", trade: "Drywall", coiExpires: "2099-01-01", lienWaiverCurrent: false, projects: ["Test Build"] }];
+  assert.equal(deriveAttention(d).find((i) => i.id === "sub-s2")!.severity, "watch");
 });
 
 test("overdue signature escalates", () => {

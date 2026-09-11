@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { SignatureDoc } from "@/lib/data/types";
 import { fmtUSD } from "@/lib/format";
 import { SectionCard } from "./SectionCard";
@@ -34,6 +35,9 @@ export function SignaturesSection({ docs }: { docs: SignatureDoc[] }) {
           );
         })}
       </ul>
+      <Link href="/compliance" className="mt-3 inline-block text-xs text-muted hover:text-ink">
+        Insurance &amp; lien waivers →
+      </Link>
     </SectionCard>
   );
 }

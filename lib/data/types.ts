@@ -5,6 +5,8 @@ export type Money = number; // USD
 export type TrendPoint = { label: string; value: number };
 export type Severity = "escalate" | "watch" | "ok";
 
+export type CashWeek = { label: string; inflow: Money; outflow: Money; balance: Money };
+
 export type Financials = {
   revenueYTD: Money;
   revenuePriorYTD: Money;
@@ -17,6 +19,7 @@ export type Financials = {
   ap: { current: Money; overdue: Money };
   revenueTrend: TrendPoint[]; // trailing 12 months
   backlogTrend: TrendPoint[];
+  cashForecast: CashWeek[]; // weekly draws-in vs bills-out, ending balance
 };
 
 export type ScheduleStatus = "on_track" | "at_risk" | "behind";
@@ -120,13 +123,23 @@ export type SignatureDoc = {
   amount: Money;
 };
 
+export type Sub = {
+  id: string;
+  name: string;
+  trade: string;
+  coiExpires: string; // ISO — insurance certificate expiry
+  lienWaiverCurrent: boolean;
+  projects: string[]; // builds they're working
+};
+
 export type Domain =
   | "Financials"
   | "Projects"
   | "Pipeline"
   | "Clients"
   | "Team"
-  | "Signatures";
+  | "Signatures"
+  | "Compliance";
 
 export type AttentionItem = {
   id: string;

@@ -10,6 +10,7 @@ import type {
   Pipeline,
   Team,
   SignatureDoc,
+  Sub,
 } from "./types";
 import * as mock from "./mock";
 import { deriveAttention } from "./attention";
@@ -32,15 +33,19 @@ export async function getTeam(): Promise<Team> {
 export async function getSignatures(): Promise<SignatureDoc[]> {
   return mock.signatures; // live: Docusign eSignature API
 }
+export async function getSubs(): Promise<Sub[]> {
+  return mock.subs; // live: COI tracking / Sheets
+}
 
 export async function getDashboard(): Promise<DashboardData> {
-  const [financials, projects, clients, pipeline, team, signatures] = await Promise.all([
+  const [financials, projects, clients, pipeline, team, signatures, subs] = await Promise.all([
     getFinancials(),
     getProjects(),
     getClients(),
     getPipeline(),
     getTeam(),
     getSignatures(),
+    getSubs(),
   ]);
   return {
     asOf: new Date().toISOString(),
@@ -50,6 +55,6 @@ export async function getDashboard(): Promise<DashboardData> {
     pipeline,
     team,
     signatures,
-    attention: deriveAttention({ financials, projects, clients, team, signatures }),
+    attention: deriveAttention({ financials, projects, clients, team, signatures, subs }),
   };
 }
