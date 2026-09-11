@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Gilda_Display, PT_Serif } from "next/font/google";
 import "./globals.css";
 
-const serif = Fraunces({
-  variable: "--font-fraunces",
+// Herrle's brand fonts (from herrlecustomhomes.com).
+const display = Gilda_Display({
+  variable: "--font-gilda",
   subsets: ["latin"],
+  weight: "400",
   display: "swap",
 });
 
-const sans = Inter({
-  variable: "--font-inter",
+const body = PT_Serif({
+  variable: "--font-pt",
   subsets: ["latin"],
+  weight: ["400", "700"],
   display: "swap",
 });
 
@@ -21,10 +24,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${serif.variable} ${sans.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${display.variable} ${body.variable} h-full antialiased`}>
       <body className="min-h-full">{children}</body>
     </html>
   );
