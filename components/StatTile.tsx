@@ -20,7 +20,11 @@ export function StatTile({
     <>
       <p className="text-[11px] uppercase tracking-[0.12em] text-muted">
         {label}
-        {href && <span className="ml-1 text-muted/60 group-hover:text-ink">→</span>}
+        {href && (
+          <span className="ml-1 inline-block text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-ink">
+            →
+          </span>
+        )}
       </p>
       <div className="mt-1.5 flex items-baseline gap-2">
         <p className={`font-serif text-2xl leading-none ${accent}`}>{value}</p>
