@@ -1,9 +1,8 @@
 @import "tailwindcss";
 
-/* Herrle Custom Homes — brand tokens.
-   Warm, material-honest palette (linen, oak, stone, forest green, warm charcoal).
-   Colors are defined as raw vars in :root and swapped for dark; @theme maps them
-   to Tailwind utilities (bg-canvas, text-ink, text-primary, border-line, ...). */
+/* Herrle Custom Homes brand — matched to herrlecustomhomes.com:
+   pure black on white, Gilda Display (headings) + PT Serif (body).
+   Light only (the brand, and the logo, are black-on-white). */
 @theme inline {
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);
@@ -17,45 +16,29 @@
   --color-sage: var(--sage);
   --color-amber: var(--amber);
   --color-terracotta: var(--terracotta);
-  --font-serif: var(--font-fraunces);
-  --font-sans: var(--font-inter);
+  --font-serif: var(--font-gilda);
+  --font-sans: var(--font-pt);
 }
 
 :root {
-  --canvas: #f4efe4;
-  --surface: #fdfbf6;
-  --surface-2: #efe8d9;
-  --line: #e4dcc9;
-  --ink: #2a2620;
-  --muted: #6f6857;
-  --primary: #33463a;
-  --oak: #a9865a;
-  --stone: #8c8578;
-  --sage: #5f7a5a;
-  --amber: #b4842b;
-  --terracotta: #a9552f;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --canvas: #17150f;
-    --surface: #201d16;
-    --surface-2: #2a261d;
-    --line: #35302a;
-    --ink: #ece6d8;
-    --muted: #a79e88;
-    --primary: #86a98c;
-    --oak: #c6a277;
-    --stone: #9a9384;
-    --sage: #7fa07a;
-    --amber: #d2a24a;
-    --terracotta: #ce7a55;
-  }
+  color-scheme: light;
+  --canvas: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f5f5f4;
+  --line: #e6e6e3;
+  --ink: #141414;
+  --muted: #6b6b6b;
+  --primary: #141414; /* black — charts, key accents, primary button */
+  --oak: #737373; /* neutral gray accent (brand is monochrome) */
+  --stone: #8a8a8a;
+  --sage: #4a7a5c; /* muted green — healthy */
+  --amber: #a8730a; /* muted ochre — watch */
+  --terracotta: #a62b1f; /* muted red — escalate */
 }
 
 body {
   background: var(--canvas);
   color: var(--ink);
-  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-pt), Georgia, "Times New Roman", serif;
   font-feature-settings: "tnum" 1; /* tabular figures for aligned numbers */
 }
