@@ -15,7 +15,7 @@ function budgetColor(p: Project): string {
 
 export function ProjectsSection({ projects }: { projects: Project[] }) {
   return (
-    <SectionCard eyebrow="Active projects" title="On the boards" right={`${projects.length} builds`}>
+    <SectionCard title="Active projects" right={`${projects.length} builds`}>
       <ul className="divide-y divide-line">
         {projects.map((p) => {
           const sched = scheduleMeta[p.schedule];

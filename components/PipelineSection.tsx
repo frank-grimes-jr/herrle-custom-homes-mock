@@ -13,7 +13,7 @@ export function PipelineSection({ p }: { p: Pipeline }) {
   const weighted = p.opportunities.reduce((s, o) => s + (o.estValue * o.probability) / 100, 0);
 
   return (
-    <SectionCard eyebrow="Growth & pipeline" title="What's coming">
+    <SectionCard title="Pipeline">
       <div className="grid grid-cols-2 gap-3">
         <StatTile label="Signed YTD" value={p.signedYTD} sub={`${fmtUSD(p.signedValueYTD, true)} contracted`} />
         <StatTile label="Win rate" value={fmtPct(p.winRatePct)} sub="last 12 months" />

@@ -4,7 +4,7 @@ import { SectionCard } from "./SectionCard";
 
 export function ClientsSection({ clients }: { clients: Client[] }) {
   return (
-    <SectionCard eyebrow="Client relationships" title="How clients feel" right={`${clients.length} active`}>
+    <SectionCard title="Clients" right={`${clients.length} active`}>
       <ul className="divide-y divide-line">
         {clients.map((c) => {
           const s = sentimentMeta[c.sentiment];

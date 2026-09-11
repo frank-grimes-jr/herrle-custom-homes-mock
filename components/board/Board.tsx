@@ -318,8 +318,7 @@ function StandupModal({
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-oak">Team standup</p>
-            <h2 className="font-serif text-2xl text-ink">Worth bringing to everyone</h2>
+            <h2 className="font-serif text-2xl text-ink">Standup agenda</h2>
           </div>
           <button onClick={onClose} className="text-muted hover:text-ink" aria-label="Close">
             <X size={20} />

@@ -45,7 +45,6 @@ export function AttentionPanel({
     <section className="rounded-2xl border border-line bg-surface p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)] md:p-8">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-oak">Where things stand</p>
           <h1 className="font-serif text-2xl text-ink md:text-3xl">What needs your attention</h1>
         </div>
         <div className="flex flex-wrap gap-2 text-sm">

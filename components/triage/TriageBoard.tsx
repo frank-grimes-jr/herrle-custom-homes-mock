@@ -15,7 +15,7 @@ export function TriageBoard({ digests }: { digests: Record<Period, Digest> }) {
   return (
     <>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted">Email triage · three briefs a day, not an inbox</p>
+        <p className="text-sm text-muted">Daily briefs</p>
         <PeriodTabs active={period} onSelect={setPeriod} />
       </div>
 

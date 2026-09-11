@@ -16,7 +16,7 @@ export function FinancialsSection({ f }: { f: Financials }) {
   const arTotal = f.ar.current + f.ar.d31_60 + f.ar.d61_90 + f.ar.over90;
 
   return (
-    <SectionCard eyebrow="Financial health" title="The numbers" right={`${fmtPct(f.grossMarginPct, 1)} gross margin`}>
+    <SectionCard title="Financial health" right={`${fmtPct(f.grossMarginPct, 1)} gross margin`}>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile label="Revenue YTD" value={fmtUSD(f.revenueYTD, true)} delta={delta} sub="vs. same period last year" />
         <StatTile

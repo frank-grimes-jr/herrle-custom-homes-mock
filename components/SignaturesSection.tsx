@@ -12,8 +12,7 @@ export function SignaturesSection({ docs }: { docs: SignatureDoc[] }) {
   const pending = docs.filter((d) => d.status !== "signed").length;
   return (
     <SectionCard
-      eyebrow="Documents & signatures"
-      title="Paperwork in motion"
+      title="Documents & signatures"
       right={`${pending} awaiting signature`}
     >
       <ul className="divide-y divide-line">

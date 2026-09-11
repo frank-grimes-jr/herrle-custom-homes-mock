@@ -11,8 +11,7 @@ export function TeamSection({ team }: { team: Team }) {
 
   return (
     <SectionCard
-      eyebrow="Team & tools"
-      title="The crew"
+      title="Team"
       right={`${team.members.length} people · ${avgUtil}% avg utilization`}
     >
       <div className="mb-4 rounded-xl border border-line bg-surface-2/40 p-4">
