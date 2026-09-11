@@ -28,9 +28,10 @@ function healthy(): AttentionInput {
 
 const proj = (over: Partial<AttentionInput["projects"][number]>) => ({
   id: "p1", name: "Test Build", client: "X", location: "Y",
-  contractValue: 3_000_000, budget: 2_000_000, spent: 1_000_000,
+  contractValue: 3_000_000, budget: 2_400_000, spent: 1_000_000, forecastCost: 2_400_000, // planned margin 20%
   percentComplete: 50, schedule: "on_track" as const, nextMilestone: "Framing",
   daysToNextMilestone: 10, targetCompletion: "2027-01-01", openDecisions: 0,
+  changeOrders: [], milestones: [], selections: [], longLead: [],
   ...over,
 });
 
@@ -54,18 +55,30 @@ test("short cash runway escalates, tightening runway only watches", () => {
   assert.equal(deriveAttention(d).find((i) => i.id === "fin-runway")!.severity, "watch");
 });
 
-test("projected over-budget escalates past 10%, watches at 5–10%", () => {
-  // spent 1.4M at 50% → projected 2.8M vs 2.0M budget = +40% → escalate
-  const esc = deriveAttention({ ...healthy(), projects: [proj({ spent: 1_400_000 })] });
-  assert.equal(esc.find((i) => i.id === "proj-budget-p1")!.severity, "escalate");
-  // spent 1.07M at 50% → projected 2.14M = +7% → watch
-  const watch = deriveAttention({ ...healthy(), projects: [proj({ spent: 1_070_000 })] });
-  assert.equal(watch.find((i) => i.id === "proj-budget-p1")!.severity, "watch");
+test("a healthy build produces no attention item", () => {
+  assert.equal(deriveAttention({ ...healthy(), projects: [proj({})] }).length, 0);
 });
 
-test("behind schedule escalates", () => {
+test("margin fade escalates past 6 points, watches at 3–6", () => {
+  // planned 20%; forecast 2.7M → projected 10% → 10pt fade → escalate
+  const esc = deriveAttention({ ...healthy(), projects: [proj({ forecastCost: 2_700_000 })] });
+  assert.equal(esc.find((i) => i.id === "project-p1")!.severity, "escalate");
+  // forecast 2.52M → projected 16% → 4pt fade → watch
+  const watch = deriveAttention({ ...healthy(), projects: [proj({ forecastCost: 2_520_000 })] });
+  assert.equal(watch.find((i) => i.id === "project-p1")!.severity, "watch");
+});
+
+test("behind schedule escalates its build", () => {
   const items = deriveAttention({ ...healthy(), projects: [proj({ schedule: "behind" })] });
-  assert.equal(items.find((i) => i.id === "proj-sched-p1")!.severity, "escalate");
+  assert.equal(items.find((i) => i.id === "project-p1")!.severity, "escalate");
+});
+
+test("a late long-lead item escalates its build", () => {
+  const items = deriveAttention({
+    ...healthy(),
+    projects: [proj({ longLead: [{ label: "Windows", neededBy: "2026-09-15", eta: "2026-09-29", status: "late" }] })],
+  });
+  assert.equal(items.find((i) => i.id === "project-p1")!.severity, "escalate");
 });
 
 test("overdue signature escalates", () => {

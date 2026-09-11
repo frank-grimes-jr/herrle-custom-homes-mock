@@ -1,17 +1,27 @@
+import Link from "next/link";
 import type { AttentionItem } from "@/lib/data/types";
 import { sevDot } from "@/lib/ui";
 
 function ItemRow({ item }: { item: AttentionItem }) {
+  const body = (
+    <>
+      <div className="flex items-start justify-between gap-3">
+        <p className="font-medium text-ink group-hover:underline">{item.title}</p>
+        <span className="shrink-0 text-[11px] uppercase tracking-wider text-muted">{item.domain}</span>
+      </div>
+      <p className="text-sm text-muted">{item.detail}</p>
+    </>
+  );
   return (
     <li className="flex gap-3 border-b border-line/60 py-3 last:border-0">
       <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${sevDot[item.severity]}`} />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-3">
-          <p className="font-medium text-ink">{item.title}</p>
-          <span className="shrink-0 text-[11px] uppercase tracking-wider text-muted">{item.domain}</span>
-        </div>
-        <p className="text-sm text-muted">{item.detail}</p>
-      </div>
+      {item.href ? (
+        <Link href={item.href} className="group min-w-0 flex-1">
+          {body}
+        </Link>
+      ) : (
+        <div className="min-w-0 flex-1">{body}</div>
+      )}
     </li>
   );
 }

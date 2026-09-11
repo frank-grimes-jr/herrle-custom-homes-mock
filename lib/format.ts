@@ -23,3 +23,12 @@ export function fmtDelta(current: number, prior: number): { text: string; up: bo
 export function runwayMonths(cash: number, monthlyBurn: number): number {
   return monthlyBurn <= 0 ? Infinity : cash / monthlyBurn;
 }
+
+// Gross margin % from contract value and a cost figure.
+export function marginPct(contract: number, cost: number): number {
+  return contract <= 0 ? 0 : ((contract - cost) / contract) * 100;
+}
+
+export function fmtDate(iso: string): string {
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(iso));
+}

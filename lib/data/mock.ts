@@ -34,33 +34,89 @@ export const financials: Financials = {
 export const projects: Project[] = [
   {
     id: "blackledge", name: "Blackledge Point", client: "Harmon Residence", location: "Old Lyme, CT",
-    contractValue: 3_900_000, budget: 3_100_000, spent: 1_550_000, percentComplete: 55,
-    schedule: "on_track", nextMilestone: "Framing inspection", daysToNextMilestone: 12,
+    contractValue: 3_900_000, budget: 3_100_000, spent: 1_550_000, forecastCost: 3_120_000, percentComplete: 55,
+    schedule: "on_track", nextMilestone: "Framing inspection", daysToNextMilestone: 6,
     targetCompletion: "2026-12-15", openDecisions: 2,
+    changeOrders: [{ id: "co-bl1", title: "Added mudroom built-ins", amount: 22_000, status: "approved" }],
+    milestones: [
+      { label: "Foundation", date: "2026-05-10", status: "done" },
+      { label: "Framing complete", date: "2026-08-20", status: "done" },
+      { label: "Framing inspection", date: "2026-09-17", status: "upcoming" },
+      { label: "Mechanicals rough-in", date: "2026-10-15", status: "upcoming" },
+      { label: "Interior finishes", date: "2026-12-01", status: "upcoming" },
+    ],
+    selections: [
+      { label: "Primary bath tile", status: "pending", allowance: 18_000 },
+      { label: "Kitchen cabinetry", status: "chosen", allowance: 95_000, actual: 98_000 },
+    ],
+    longLead: [{ label: "Custom entry doors", vendor: "Upstate Door", neededBy: "2026-10-20", eta: "2026-10-12", status: "on_time" }],
   },
   {
     id: "hawksnest", name: "Hawk's Nest Bluff", client: "Delano Residence", location: "East Lyme, CT",
-    contractValue: 5_400_000, budget: 4_300_000, spent: 3_440_000, percentComplete: 70, // projected ~+14% → escalate
-    schedule: "at_risk", nextMilestone: "Window delivery", daysToNextMilestone: 5,
+    contractValue: 5_400_000, budget: 4_300_000, spent: 3_440_000, forecastCost: 4_900_000, percentComplete: 70,
+    schedule: "at_risk", nextMilestone: "Window install", daysToNextMilestone: 5,
     targetCompletion: "2027-04-01", openDecisions: 2,
+    changeOrders: [
+      { id: "co-hn3", title: "Change Order #3 — structural steel upgrade", amount: 145_000, status: "overdue" },
+      { id: "co-hn1", title: "Site drainage revision", amount: 60_000, status: "approved" },
+    ],
+    milestones: [
+      { label: "Foundation", date: "2026-04-15", status: "done" },
+      { label: "Framing complete", date: "2026-08-05", status: "done" },
+      { label: "Window install", date: "2026-09-20", status: "late" },
+      { label: "Roofing", date: "2026-10-05", status: "at_risk" },
+      { label: "Mechanicals rough-in", date: "2026-11-15", status: "upcoming" },
+    ],
+    selections: [{ label: "Exterior stone", status: "chosen", allowance: 80_000, actual: 92_000 }],
+    longLead: [{ label: "Black-frame windows", vendor: "Marvin Windows & Doors", neededBy: "2026-09-15", eta: "2026-09-29", status: "late" }],
   },
   {
     id: "eightmile", name: "Eightmile Ridge", client: "Pruitt Residence", location: "Lyme, CT",
-    contractValue: 2_600_000, budget: 2_050_000, spent: 1_780_000, percentComplete: 88,
-    schedule: "behind", nextMilestone: "Millwork + final trim", daysToNextMilestone: 8, // behind → escalate
+    contractValue: 2_600_000, budget: 2_050_000, spent: 1_780_000, forecastCost: 2_090_000, percentComplete: 88,
+    schedule: "behind", nextMilestone: "Millwork + final trim", daysToNextMilestone: 8,
     targetCompletion: "2026-10-30", openDecisions: 1,
+    changeOrders: [{ id: "co-em1", title: "Extra millwork in study", amount: 34_000, status: "approved" }],
+    milestones: [
+      { label: "Framing complete", date: "2026-03-10", status: "done" },
+      { label: "Mechanicals + insulation", date: "2026-07-01", status: "done" },
+      { label: "Millwork + final trim", date: "2026-10-10", status: "late" },
+      { label: "Punch list", date: "2026-10-25", status: "at_risk" },
+      { label: "Final walkthrough", date: "2026-10-30", status: "upcoming" },
+    ],
+    selections: [],
+    longLead: [{ label: "Custom range hood", vendor: "Best Range Hoods", neededBy: "2026-10-01", eta: "2026-09-24", status: "on_time" }],
   },
   {
     id: "saltmeadow", name: "Saltmeadow", client: "Whitcomb Residence", location: "Old Saybrook, CT",
-    contractValue: 4_100_000, budget: 3_250_000, spent: 650_000, percentComplete: 20,
+    contractValue: 4_100_000, budget: 3_250_000, spent: 650_000, forecastCost: 3_250_000, percentComplete: 20,
     schedule: "on_track", nextMilestone: "Foundation pour", daysToNextMilestone: 15,
     targetCompletion: "2027-06-15", openDecisions: 3,
+    changeOrders: [],
+    milestones: [
+      { label: "Sitework + excavation", date: "2026-08-25", status: "done" },
+      { label: "Foundation pour", date: "2026-09-26", status: "upcoming" },
+      { label: "Framing", date: "2026-11-10", status: "upcoming" },
+    ],
+    selections: [
+      { label: "Window package", status: "pending", allowance: 120_000 },
+      { label: "Roofing material", status: "pending", allowance: 45_000 },
+      { label: "Exterior siding (Kebony)", status: "pending", allowance: 90_000 },
+    ],
+    longLead: [{ label: "Geothermal system", vendor: "Shoreline Geothermal", neededBy: "2027-01-10", eta: "2027-01-06", status: "on_time" }],
   },
   {
     id: "whippoorwill", name: "Whippoorwill Hollow", client: "Alden Residence", location: "Essex, CT",
-    contractValue: 1_900_000, budget: 1_500_000, spent: 1_350_000, percentComplete: 95,
+    contractValue: 1_900_000, budget: 1_500_000, spent: 1_350_000, forecastCost: 1_480_000, percentComplete: 95,
     schedule: "on_track", nextMilestone: "Punch list + walkthrough", daysToNextMilestone: 6,
     targetCompletion: "2026-09-30", openDecisions: 0,
+    changeOrders: [{ id: "co-wh1", title: "Upgraded lighting package", amount: 18_000, status: "approved" }],
+    milestones: [
+      { label: "Interior finishes", date: "2026-08-15", status: "done" },
+      { label: "Punch list", date: "2026-09-20", status: "upcoming" },
+      { label: "Final walkthrough", date: "2026-09-30", status: "upcoming" },
+    ],
+    selections: [],
+    longLead: [],
   },
 ];
 

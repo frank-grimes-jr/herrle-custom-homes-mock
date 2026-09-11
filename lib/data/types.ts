@@ -21,6 +21,31 @@ export type Financials = {
 
 export type ScheduleStatus = "on_track" | "at_risk" | "behind";
 
+export type ChangeOrder = {
+  id: string;
+  title: string;
+  amount: Money;
+  status: "approved" | "pending" | "overdue";
+};
+
+export type MilestoneStatus = "done" | "upcoming" | "at_risk" | "late";
+export type Milestone = { label: string; date: string; status: MilestoneStatus };
+
+export type Selection = {
+  label: string;
+  status: "chosen" | "pending" | "overdue";
+  allowance?: Money;
+  actual?: Money; // set once chosen; overage = actual − allowance
+};
+
+export type LongLeadItem = {
+  label: string;
+  vendor?: string;
+  neededBy: string; // ISO
+  eta: string; // ISO
+  status: "on_time" | "at_risk" | "late";
+};
+
 export type Project = {
   id: string;
   name: string;
@@ -29,12 +54,17 @@ export type Project = {
   contractValue: Money;
   budget: Money; // cost budget
   spent: Money;
+  forecastCost: Money; // current projected final cost (> budget = margin fade)
   percentComplete: number; // 0–100
   schedule: ScheduleStatus;
   nextMilestone: string;
   daysToNextMilestone: number;
   targetCompletion: string; // ISO date
   openDecisions: number; // client selections pending
+  changeOrders: ChangeOrder[];
+  milestones: Milestone[];
+  selections: Selection[];
+  longLead: LongLeadItem[];
 };
 
 export type Client = {
@@ -104,6 +134,7 @@ export type AttentionItem = {
   title: string;
   detail: string;
   domain: Domain;
+  href?: string; // optional deep-link (e.g. a project drill-down)
 };
 
 export type DashboardData = {

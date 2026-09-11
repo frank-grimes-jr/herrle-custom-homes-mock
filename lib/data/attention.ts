@@ -19,8 +19,9 @@ export type AttentionInput = {
 // deliberately plain constants, not a rules engine. ponytail: rules engine
 // only if the rule count outgrows a readable list of if-statements.
 export const THRESHOLDS = {
-  budgetOverEscalatePct: 10, // projected cost over budget by this % → escalate
-  budgetOverWatchPct: 5,
+  marginFadeEscalate: 6, // projected margin below plan by this many points → escalate
+  marginFadeWatch: 3,
+  allowanceOverWatch: 10_000, // a selection over its allowance by this much → watch
   arOver90Escalate: 50_000, // $ aged past 90 days
   runwayMonthsEscalate: 1.5,
   runwayMonthsWatch: 3,
@@ -30,13 +31,6 @@ export const THRESHOLDS = {
   clientNoContactWatchDays: 21,
   openDecisionsWatch: 4,
 };
-
-// Projected final cost from spend-to-date and % complete.
-function projectedOverBudgetPct(p: Project): number | null {
-  if (p.percentComplete < 5) return null; // too early to project meaningfully
-  const projected = p.spent / (p.percentComplete / 100);
-  return ((projected - p.budget) / p.budget) * 100;
-}
 
 const SEV_ORDER = { escalate: 0, watch: 1 } as const;
 
@@ -102,43 +96,50 @@ export function deriveAttention(d: AttentionInput): AttentionItem[] {
     });
   }
 
-  // — Projects —
+  // — Projects — ONE line per troubled build (its worst issue), deep-linked to
+  // the drill-down. Prevents a single project from spamming the feed. Healthy = silent.
   for (const p of d.projects) {
-    const overPct = projectedOverBudgetPct(p);
-    if (overPct !== null && overPct >= T.budgetOverEscalatePct) {
-      push({
-        id: `proj-budget-${p.id}`,
-        severity: "escalate",
-        domain: "Projects",
-        title: `${p.name} trending over budget`,
-        detail: `Projected ~${overPct.toFixed(0)}% over cost budget at ${p.percentComplete}% complete.`,
-      });
-    } else if (overPct !== null && overPct >= T.budgetOverWatchPct) {
-      push({
-        id: `proj-budget-${p.id}`,
-        severity: "watch",
-        domain: "Projects",
-        title: `${p.name} nearing budget`,
-        detail: `Projected ~${overPct.toFixed(0)}% over cost budget at ${p.percentComplete}% complete.`,
-      });
+    const issues: { severity: "escalate" | "watch"; text: string }[] = [];
+
+    // Margin fade (job cost): planned vs projected gross margin.
+    const planned = ((p.contractValue - p.budget) / p.contractValue) * 100;
+    const projected = ((p.contractValue - p.forecastCost) / p.contractValue) * 100;
+    const fade = planned - projected;
+    if (fade >= T.marginFadeEscalate) {
+      issues.push({ severity: "escalate", text: `profit projected at ${projected.toFixed(0)}% (planned ${planned.toFixed(0)}%)` });
+    } else if (fade >= T.marginFadeWatch) {
+      issues.push({ severity: "watch", text: `margin slipping to ${projected.toFixed(0)}% (planned ${planned.toFixed(0)}%)` });
     }
-    if (p.schedule === "behind") {
-      push({
-        id: `proj-sched-${p.id}`,
-        severity: "escalate",
-        domain: "Projects",
-        title: `${p.name} is behind schedule`,
-        detail: `Next: ${p.nextMilestone} in ${p.daysToNextMilestone} days.`,
-      });
-    } else if (p.schedule === "at_risk") {
-      push({
-        id: `proj-sched-${p.id}`,
-        severity: "watch",
-        domain: "Projects",
-        title: `${p.name} schedule at risk`,
-        detail: `Next: ${p.nextMilestone} in ${p.daysToNextMilestone} days.`,
-      });
+
+    // Schedule.
+    if (p.schedule === "behind") issues.push({ severity: "escalate", text: "behind schedule" });
+    else if (p.schedule === "at_risk") issues.push({ severity: "watch", text: "schedule at risk" });
+
+    // Long-lead procurement (e.g. the window delay).
+    for (const item of p.longLead) {
+      if (item.status === "late") issues.push({ severity: "escalate", text: `${item.label} delayed` });
+      else if (item.status === "at_risk") issues.push({ severity: "watch", text: `${item.label} may slip` });
     }
+
+    // Selections / allowances.
+    for (const s of p.selections) {
+      if (s.status === "overdue") issues.push({ severity: "watch", text: `${s.label} selection overdue` });
+      else if (s.actual !== undefined && s.allowance !== undefined && s.actual - s.allowance >= T.allowanceOverWatch) {
+        issues.push({ severity: "watch", text: `${s.label} over allowance` });
+      }
+    }
+
+    if (issues.length === 0) continue;
+    const top = issues.find((i) => i.severity === "escalate") ?? issues[0];
+    const more = issues.length - 1;
+    push({
+      id: `project-${p.id}`,
+      severity: issues.some((i) => i.severity === "escalate") ? "escalate" : "watch",
+      domain: "Projects",
+      title: `${p.name} — ${top.text}`,
+      detail: more > 0 ? `+${more} more to review on this build.` : "Open the build for detail.",
+      href: `/projects/${p.id}`,
+    });
   }
 
   // — Clients —
