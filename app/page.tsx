@@ -39,8 +39,7 @@ export default async function Page() {
       </div>
 
       <footer className="mt-8 border-t border-line pt-4 text-xs text-muted">
-        Phase 1 preview · figures are sample data. Live sources (accounting, Google
-        Sheets, Docusign, Claude usage) wire in next — the layout stays the same.
+        Herrle Custom Homes · Confidential
       </footer>
     </main>
   );

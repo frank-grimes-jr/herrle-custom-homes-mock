@@ -74,10 +74,10 @@ test("overdue signature escalates", () => {
   assert.equal(deriveAttention(d).find((i) => i.id === "sig-s1")!.severity, "escalate");
 });
 
-test("idle Claude seats produce a watch", () => {
+test("idle software seats produce a watch", () => {
   const d = healthy();
   d.team.claudeSeatsActive = 4;
-  assert.equal(deriveAttention(d).find((i) => i.id === "team-claude")!.severity, "watch");
+  assert.equal(deriveAttention(d).find((i) => i.id === "team-tools")!.severity, "watch");
 });
 
 test("escalate items sort before watch items", () => {

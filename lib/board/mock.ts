@@ -20,7 +20,7 @@ export function defaultBoard(): Board {
         cards: [
           { id: "c-hire", title: "Hire a second lead carpenter", note: "Capacity is the bottleneck on taking a 6th build." },
           { id: "c-selections", title: "Systematize the client selections process" },
-          { id: "c-claude", title: "Get the team to 80% Claude adoption", note: "2 seats idle last week." },
+          { id: "c-software", title: "Get the team to 80% software adoption", note: "2 seats idle last week." },
         ],
       },
       {

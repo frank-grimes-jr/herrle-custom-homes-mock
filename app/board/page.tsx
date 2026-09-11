@@ -11,8 +11,8 @@ export default async function Page() {
         <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-oak">Dave&rsquo;s board</p>
         <h1 className="font-serif text-2xl text-ink">High-level efforts</h1>
         <p className="mt-1 text-sm text-muted">
-          Business efforts, not projects. Rename lanes, add cards, drag them forward — it&rsquo;s yours.
-          Your layout saves in this browser.
+          Business efforts, not projects — rename lanes, add cards, and move them forward as they
+          progress. Your board saves automatically.
         </p>
       </div>
       <div className="mt-6">

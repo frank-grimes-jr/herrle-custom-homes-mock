@@ -196,11 +196,11 @@ export function deriveAttention(d: AttentionInput): AttentionItem[] {
   if (d.team.claudeSeatsActive < d.team.claudeSeats) {
     const idle = d.team.claudeSeats - d.team.claudeSeatsActive;
     push({
-      id: "team-claude",
+      id: "team-tools",
       severity: "watch",
       domain: "Team",
-      title: `${idle} Claude seat${idle > 1 ? "s" : ""} idle this week`,
-      detail: `${d.team.claudeSeatsActive} of ${d.team.claudeSeats} seats active — underusing tools you pay for.`,
+      title: `${idle} software seat${idle > 1 ? "s" : ""} sitting idle`,
+      detail: `Only ${d.team.claudeSeatsActive} of ${d.team.claudeSeats} seats were active this week — you're paying for tools no one's using.`,
     });
   }
 

@@ -17,7 +17,7 @@ export function TeamSection({ team }: { team: Team }) {
     >
       <div className="mb-4 rounded-xl border border-line bg-surface-2/40 p-4">
         <div className="flex items-center justify-between">
-          <p className="text-[11px] uppercase tracking-[0.12em] text-muted">Claude adoption</p>
+          <p className="text-[11px] uppercase tracking-[0.12em] text-muted">Software adoption</p>
           <p className="text-sm text-ink">
             <span className={team.claudeSeatsActive < team.claudeSeats ? "text-amber" : "text-sage"}>
               {team.claudeSeatsActive}
