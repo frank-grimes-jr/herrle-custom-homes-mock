@@ -12,6 +12,6 @@ const isPages = process.env.BUILD_TARGET === "pages";
 
 const nextConfig: NextConfig = isPages
   ? { output: "export", basePath: `/${repo}`, trailingSlash: true, images: { unoptimized: true } }
-  : { images: { unoptimized: true }, serverExternalPackages: ["@napi-rs/keyring", "googleapis"] };
+  : { images: { unoptimized: true }, serverExternalPackages: ["@napi-rs/keyring", "googleapis", "plaid"] };
 
 export default nextConfig;

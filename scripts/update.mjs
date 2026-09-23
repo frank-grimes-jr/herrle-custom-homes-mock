@@ -8,8 +8,12 @@
 // downtime; fine for a single-user cockpit. Upgrade path: skip the rebuild when
 // the diff touches no build inputs.
 import { execSync, spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
 
-const ROOT = process.cwd();
+// Repo root resolved from this file's location, so the scheduled task can launch
+// it from any working directory.
+const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const BRANCH = "main";
 const PORT = 3000;
 

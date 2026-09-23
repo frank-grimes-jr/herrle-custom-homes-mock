@@ -15,6 +15,19 @@ export const GOOGLE_CLIENT_ID = "google_client_id";
 export const GOOGLE_CLIENT_SECRET = "google_client_secret";
 export const GOOGLE_REFRESH_TOKEN = "google_refresh_token";
 
+export const QBO_CLIENT_ID = "qbo_client_id";
+export const QBO_CLIENT_SECRET = "qbo_client_secret";
+export const QBO_REFRESH_TOKEN = "qbo_refresh_token";
+export const QBO_REALM_ID = "qbo_realm_id"; // the connected QuickBooks company
+
+export const PLAID_CLIENT_ID = "plaid_client_id";
+export const PLAID_SECRET = "plaid_secret";
+export const PLAID_ENV = "plaid_env"; // "sandbox" | "production"
+export const PLAID_ACCESS_TOKEN = "plaid_access_token";
+export const PLAID_ITEM_ID = "plaid_item_id";
+
+export const ANTHROPIC_KEY = "anthropic_api_key"; // powers the inbox/intelligence
+
 export function getSecret(key: string): string | null {
   try {
     return new Entry(SERVICE, key).getPassword(); // null when unset
