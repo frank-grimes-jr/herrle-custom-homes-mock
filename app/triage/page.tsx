@@ -3,6 +3,9 @@ import type { Digest, Period } from "@/lib/triage/types";
 import { TopNav } from "@/components/TopNav";
 import { TriageBoard } from "@/components/triage/TriageBoard";
 
+// Live email is fetched per request (never baked in at build time).
+export const dynamic = "force-dynamic";
+
 const PERIODS: Period[] = ["morning", "afternoon", "evening"];
 
 export default async function Page() {

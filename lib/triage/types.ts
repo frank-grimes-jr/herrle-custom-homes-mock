@@ -12,7 +12,8 @@ export type EmailRole =
   | "authority"
   | "architect"
   | "internal"
-  | "personal";
+  | "personal"
+  | "unknown"; // live Gmail fetches don't know the sender's role
 
 // Bucket: one email lands in exactly one. needs_you = action/decision/reply;
 // sentiment = notable tone worth awareness; fyi = informational / handled-able.

@@ -1,0 +1,27 @@
+name: Build check
+
+# Validates every commit to main so Dave's laptop only auto-pulls green builds.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24 # native TS test execution (node --test *.ts)
+          cache: npm
+      - run: npm ci
+      - run: npm test # secrets vault test self-skips where no OS keyring exists
+      - run: npm run build # server build (no BUILD_TARGET)
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
