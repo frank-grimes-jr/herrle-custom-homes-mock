@@ -96,5 +96,5 @@ for (const [name, sched] of tasks) {
 console.log("  + scheduled tasks registered (start at logon + update every 5 min)");
 
 console.log(`\nDone. Open http://${HOST}`);
-console.log("Google/QuickBooks OAuth redirect (register these): http://localhost:" + PORT + "/api/integrations/<provider>/callback\n");
+console.log("QuickBooks OAuth redirect (register it): http://localhost:" + PORT + "/api/integrations/quickbooks/callback\n");
 sh(`"${NODE}" "${join(REPO, "scripts", "update.mjs")}"`, { cwd: REPO }); // start it now

@@ -3,32 +3,31 @@ import Link from "next/link";
 import { TopNav } from "@/components/TopNav";
 import { SectionCard } from "@/components/SectionCard";
 import { PlaidConnect } from "@/components/admin/PlaidConnect";
-import { isGoogleConfigured, isGoogleConnected } from "@/lib/google";
+import { isEmailConfigured } from "@/lib/email";
 import { isQuickBooksConfigured, isQuickBooksConnected } from "@/lib/quickbooks";
 import { isPlaidConfigured, isPlaidConnected } from "@/lib/plaid";
 
 export const dynamic = "force-dynamic"; // reflect live vault state on every request
 
 const PRIMARY = "rounded-lg bg-primary px-3 py-1.5 text-sm text-canvas hover:opacity-90";
-const SECONDARY = "rounded-lg border border-line px-3 py-1.5 text-sm text-ink hover:bg-surface-2";
 
 const MESSAGES: Record<string, string> = {
   connected: "connected.",
   disconnected: "disconnected.",
   configured: "credentials saved — you can connect now.",
   not_configured: "needs credentials first.",
-  error: "couldn’t connect. Please try again.",
+  error: "couldn’t connect. Please check the details and try again.",
 };
 const PROVIDER_NAMES: Record<string, string> = {
-  google: "Google",
+  email: "Email",
   quickbooks: "QuickBooks",
   plaid: "Bank",
 };
 
-type SP = { google?: string; quickbooks?: string; plaid?: string };
+type SP = { email?: string; quickbooks?: string; plaid?: string };
 
 function statusNotice(sp: SP): string | null {
-  for (const key of ["google", "quickbooks", "plaid"] as const) {
+  for (const key of ["email", "quickbooks", "plaid"] as const) {
     const v = sp[key];
     if (v && MESSAGES[v]) return `${PROVIDER_NAMES[key]} ${MESSAGES[v]}`;
   }
@@ -39,7 +38,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const sp = await searchParams;
   const notice = statusNotice(sp);
 
-  const google = { configured: isGoogleConfigured(), connected: isGoogleConnected() };
+  const email = isEmailConfigured();
   const qbo = { configured: isQuickBooksConfigured(), connected: isQuickBooksConnected() };
   const plaid = { configured: isPlaidConfigured(), connected: isPlaidConnected() };
 
@@ -66,21 +65,55 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
       <SectionCard title="Connections">
         <div className="divide-y divide-line">
-          <ConnectionRow
-            name="Google Workspace"
-            description="Read-only access to Gmail, Calendar, and Drive."
-            connected={google.connected}
-          >
-            {google.connected ? (
-              <DisconnectForm action="/api/integrations/google/disconnect" />
-            ) : google.configured ? (
-              <a href="/api/integrations/google/start" className={PRIMARY}>
-                Connect Google
-              </a>
-            ) : (
-              <NeedsSetup />
+          {/* Email (Gmail over IMAP — app password, no Google Cloud) */}
+          <div className="py-4 first:pt-0">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-serif text-lg text-ink">Email (Gmail)</span>
+                  <StatusPill ok={email} />
+                </div>
+                <p className="mt-1 text-sm text-muted">Reads your inbox for the daily briefs.</p>
+              </div>
+              {email && <DisconnectForm action="/api/integrations/email/disconnect" />}
+            </div>
+
+            {!email && (
+              <form
+                method="post"
+                action="/api/integrations/email/config"
+                className="mt-3 grid gap-3 sm:max-w-md"
+              >
+                <p className="text-sm text-muted">
+                  Enter your Gmail address and a 16-character <strong>App Password</strong>{" "}
+                  (Google Account → Security → App passwords; requires 2-Step Verification).
+                </p>
+                <label className="grid gap-1 text-sm">
+                  <span className="text-muted">Gmail address</span>
+                  <input
+                    name="email"
+                    type="email"
+                    required
+                    autoComplete="off"
+                    className="rounded-lg border border-line bg-surface px-3 py-2 text-ink"
+                  />
+                </label>
+                <label className="grid gap-1 text-sm">
+                  <span className="text-muted">App password</span>
+                  <input
+                    name="appPassword"
+                    type="password"
+                    required
+                    autoComplete="off"
+                    className="rounded-lg border border-line bg-surface px-3 py-2 text-ink"
+                  />
+                </label>
+                <button className="justify-self-start rounded-lg bg-primary px-4 py-2 text-sm text-canvas hover:opacity-90">
+                  Connect email
+                </button>
+              </form>
             )}
-          </ConnectionRow>
+          </div>
 
           <ConnectionRow
             name="QuickBooks"
@@ -114,24 +147,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         </div>
       </SectionCard>
 
-      {/* Developer setup — one-time per provider. Each block disappears once that
-          provider's credentials exist, so in normal use Dave sees only the
-          Connect / Disconnect rows above. */}
-      {(!google.configured || !qbo.configured || !plaid.configured) && (
+      {/* Developer setup — one-time per provider. Hidden once configured. */}
+      {(!qbo.configured || !plaid.configured) && (
         <SectionCard title="Developer setup (one-time)" className="mt-6">
           <div className="grid gap-8">
-            {!google.configured && (
-              <SetupForm
-                title="Google Workspace"
-                action="/api/integrations/google/config"
-                redirectUri="http://localhost:3000/api/integrations/google/callback"
-                note="OAuth client from Google Cloud (type: Web application)."
-                fields={[
-                  { name: "clientId", label: "Client ID" },
-                  { name: "clientSecret", label: "Client secret", password: true },
-                ]}
-              />
-            )}
             {!qbo.configured && (
               <SetupForm
                 title="QuickBooks"
@@ -163,6 +182,14 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   );
 }
 
+function StatusPill({ ok }: { ok: boolean }) {
+  return (
+    <span className={`rounded-full px-2 py-0.5 text-xs ${ok ? "bg-sage/15 text-sage" : "text-muted"}`}>
+      {ok ? "Connected" : "Not connected"}
+    </span>
+  );
+}
+
 function ConnectionRow({
   name,
   description,
@@ -175,17 +202,11 @@ function ConnectionRow({
   children: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-4 py-4 first:pt-0">
+    <div className="flex flex-wrap items-start justify-between gap-4 py-4">
       <div>
         <div className="flex items-center gap-2">
           <span className="font-serif text-lg text-ink">{name}</span>
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs ${
-              connected ? "bg-sage/15 text-sage" : "text-muted"
-            }`}
-          >
-            {connected ? "Connected" : "Not connected"}
-          </span>
+          <StatusPill ok={connected} />
         </div>
         <p className="mt-1 text-sm text-muted">{description}</p>
       </div>
