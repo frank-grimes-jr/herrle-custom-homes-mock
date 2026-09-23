@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { Bucket, Digest, DigestItem, Email, Period } from "./types";
 import { SECTION_TITLES } from "./types";
 import { buildSampleDigest, rawInbox } from "./mock";
+import { fetchRecentEmails, isGoogleConnected } from "@/lib/google";
 
 // Hybrid: with an ANTHROPIC_API_KEY, Claude writes the digest; otherwise (or on
 // any failure) the deterministic sample renders so the page always works.
@@ -13,16 +14,24 @@ export async function getDigest(period: Period): Promise<Digest> {
   const cached = cache.get(period);
   if (cached) return cached;
 
-  if (process.env.ANTHROPIC_API_KEY) {
+  // Live Gmail once Dave has connected Google; otherwise the mock inbox (demo/dev).
+  // ponytail: all three briefs pull the same recent inbox and are flavored by the
+  // per-period prompt. Add time-of-day windows later if the split matters.
+  const live = isGoogleConnected();
+  const emails = live ? await fetchRecentEmails() : rawInbox(period);
+
+  if (process.env.ANTHROPIC_API_KEY && emails.length > 0) {
     try {
-      const digest = await generateWithClaude(period);
+      const digest = await generateWithClaude(period, emails);
       cache.set(period, digest); // only cache real successes → transient errors can retry
       return digest;
     } catch (err) {
-      console.error("[triage] Claude digest failed; falling back to sample:", err);
+      console.error("[triage] Claude digest failed; falling back:", err);
     }
   }
-  return buildSampleDigest(period);
+  // No summarizer (or it failed): the mock has a hand-written sample; real email
+  // degrades to a plain list so we never show mock data as if it were the inbox.
+  return live ? basicDigest(period, emails) : buildSampleDigest(period);
 }
 
 const SYSTEM = `You are the chief of staff for Dave Herrle, owner of Herrle Custom Homes, a small high-craft custom home builder on the Connecticut shoreline. You triage his inbox three times a day and brief him like a sharp, trusted right hand — not an inbox manager.
@@ -61,8 +70,7 @@ function userPrompt(period: Period, emails: Email[]): string {
   )}\n\nWrite Dave's ${period} brief as JSON.`;
 }
 
-async function generateWithClaude(period: Period): Promise<Digest> {
-  const emails = rawInbox(period);
+async function generateWithClaude(period: Period, emails: Email[]): Promise<Digest> {
   const client = new Anthropic();
   const res = await client.messages.create({
     model: "claude-opus-5",
@@ -148,4 +156,26 @@ function normalize(period: Period, raw: unknown, emails: Email[]): Digest {
 
 function coerce<T extends string>(v: unknown, allowed: T[], fallback: T): T {
   return typeof v === "string" && (allowed as string[]).includes(v) ? (v as T) : fallback;
+}
+
+// Plain, honest list of real emails when no summarizer is available — no
+// interpretation, no invented urgency, and never mock data.
+function basicDigest(period: Period, emails: Email[]): Digest {
+  const items: DigestItem[] = emails.map((e) => ({
+    emailId: e.id,
+    from: e.from,
+    subject: e.subject,
+    project: e.project,
+    sentiment: "neutral",
+    urgency: "medium",
+    summary: e.subject,
+  }));
+  return {
+    period,
+    generatedAt: new Date().toISOString(),
+    source: "sample",
+    headline: `Recent inbox — ${emails.length} message${emails.length === 1 ? "" : "s"}.`,
+    counts: { total: emails.length, needsYou: 0, flagged: 0 },
+    sections: items.length ? [{ key: "needs_you", title: SECTION_TITLES.needs_you, items }] : [],
+  };
 }
