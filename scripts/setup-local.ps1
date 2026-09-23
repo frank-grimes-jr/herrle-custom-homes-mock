@@ -3,7 +3,9 @@
 #   powershell -ExecutionPolicy Bypass -File scripts\setup-local.ps1
 # It (1) maps a real hostname to loopback, (2) forwards port 80 → the app so the
 # URL has no port, (3) builds once, and (4) registers the auto-update/auto-start
-# task. Credentials are NEVER touched here — Dave sets those in the admin menu.
+# task. Dave's integration credentials are NEVER touched here (he sets those in
+# the admin menu); an optional -AnthropicKey is seeded into the OS vault.
+param([string]$AnthropicKey = "")
 
 $ErrorActionPreference = "Stop"
 $Repo = Split-Path -Parent $PSScriptRoot   # repo root (this file lives in scripts/)
@@ -33,6 +35,12 @@ try {
   Write-Host "`nInstalling and building (first run)..."
   npm ci
   npm run build
+  if ($AnthropicKey) {
+    $env:__HERRLE_AK = $AnthropicKey
+    node -e "new (require('@napi-rs/keyring').Entry)('herrle-dashboard','anthropic_api_key').setPassword(process.env.__HERRLE_AK)"
+    Remove-Item Env:__HERRLE_AK
+    Write-Host "  + Anthropic API key stored in the OS vault"
+  }
 } finally {
   Pop-Location
 }

@@ -4,6 +4,7 @@ import type { Bucket, Digest, DigestItem, Email, Period } from "./types";
 import { SECTION_TITLES } from "./types";
 import { buildSampleDigest, rawInbox } from "./mock";
 import { fetchRecentEmails, isGoogleConnected } from "@/lib/google";
+import { getSecret, ANTHROPIC_KEY } from "@/lib/secrets";
 
 // Hybrid: with an ANTHROPIC_API_KEY, Claude writes the digest; otherwise (or on
 // any failure) the deterministic sample renders so the page always works.
@@ -20,9 +21,11 @@ export async function getDigest(period: Period): Promise<Digest> {
   const live = isGoogleConnected();
   const emails = live ? await fetchRecentEmails() : rawInbox(period);
 
-  if (process.env.ANTHROPIC_API_KEY && emails.length > 0) {
+  // Claude key from the OS vault first (seeded at install), then env as fallback.
+  const apiKey = getSecret(ANTHROPIC_KEY) ?? process.env.ANTHROPIC_API_KEY;
+  if (apiKey && emails.length > 0) {
     try {
-      const digest = await generateWithClaude(period, emails);
+      const digest = await generateWithClaude(period, emails, apiKey);
       cache.set(period, digest); // only cache real successes → transient errors can retry
       return digest;
     } catch (err) {
@@ -70,8 +73,8 @@ function userPrompt(period: Period, emails: Email[]): string {
   )}\n\nWrite Dave's ${period} brief as JSON.`;
 }
 
-async function generateWithClaude(period: Period, emails: Email[]): Promise<Digest> {
-  const client = new Anthropic();
+async function generateWithClaude(period: Period, emails: Email[], apiKey: string): Promise<Digest> {
+  const client = new Anthropic({ apiKey });
   const res = await client.messages.create({
     model: "claude-opus-5",
     max_tokens: 4000,
