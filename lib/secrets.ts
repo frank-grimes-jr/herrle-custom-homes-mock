@@ -11,9 +11,9 @@ import { Entry } from "@napi-rs/keyring";
 const SERVICE = "herrle-dashboard";
 
 // Known secret ids — use these constants at call sites.
-export const GOOGLE_CLIENT_ID = "google_client_id";
-export const GOOGLE_CLIENT_SECRET = "google_client_secret";
-export const GOOGLE_REFRESH_TOKEN = "google_refresh_token";
+export const IMAP_USER = "imap_user"; // Dave's email address
+export const IMAP_PASSWORD = "imap_password"; // a Gmail App Password (read-only inbox use)
+export const IMAP_HOST = "imap_host"; // optional; defaults to imap.gmail.com
 
 export const QBO_CLIENT_ID = "qbo_client_id";
 export const QBO_CLIENT_SECRET = "qbo_client_secret";

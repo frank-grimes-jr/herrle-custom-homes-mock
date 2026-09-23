@@ -13,8 +13,9 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.125.0",
     "@napi-rs/keyring": "^2.1.0",
-    "googleapis": "^181.0.0",
+    "imapflow": "^2.0.6",
     "lucide-react": "^1.45.0",
+    "mailparser": "^3.9.28",
     "next": "16.3.4",
     "plaid": "^47.0.0",
     "react": "19.2.8",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/mailparser": "^3.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

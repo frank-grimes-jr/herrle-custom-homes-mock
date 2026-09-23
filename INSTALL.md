@@ -33,23 +33,26 @@ When it finishes, open **http://herrle.internal**.
 > Manager's secure sign-in and stores the result for unattended auto-pull. (If
 > you prefer, you can still pre-seed a read-only fine-grained token.)
 
-## Register the integrations (one time, per provider)
+## Connect the data sources
 
-Each provider's *app* is registered once (unavoidable with OAuth / bank
-aggregators). After that, **Dave** connects his own accounts from the ⚙ Admin
-page with a single button.
+**Email** needs no provider registration: on the ⚙ Admin page Dave enters his
+Gmail address and a 16-character **App Password** (Google Account → Security →
+App passwords; requires 2-Step Verification). Read-only over IMAP — no Google
+Cloud project. The dashboard verifies the login before saving.
+
+**QuickBooks** and **Bank (Plaid)** need a one-time app registration by you, then
+Dave connects with one click:
 
 | Provider | Redirect URI to register | Where |
 |---|---|---|
-| Google Workspace | `http://localhost:3000/api/integrations/google/callback` | Google Cloud → OAuth client (Web app; **Internal** app in Herrle's Workspace = no verification warning) |
 | QuickBooks | `http://localhost:3000/api/integrations/quickbooks/callback` | Intuit developer app |
 | Bank (Plaid) | — (Plaid Link, no redirect) | Plaid dashboard (start in **Sandbox**) |
 
 Paste each provider's client id/secret once under **Developer setup** on the
 Admin page; those blocks then disappear and Dave sees only Connect / Disconnect.
 
-> The connect flow briefly uses `localhost:3000` (providers reject non-`localhost`
-> `http` redirects); the everyday URL stays `herrle.internal`.
+> QuickBooks' connect flow briefly uses `localhost:3000` (Intuit rejects
+> non-`localhost` `http` redirects); the everyday URL stays `herrle.internal`.
 
 ---
 

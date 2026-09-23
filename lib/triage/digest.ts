@@ -3,7 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { Bucket, Digest, DigestItem, Email, Period } from "./types";
 import { SECTION_TITLES } from "./types";
 import { buildSampleDigest, rawInbox } from "./mock";
-import { fetchRecentEmails, isGoogleConnected } from "@/lib/google";
+import { fetchRecentEmails, isEmailConfigured } from "@/lib/email";
 import { getSecret, ANTHROPIC_KEY } from "@/lib/secrets";
 
 // Hybrid: with an ANTHROPIC_API_KEY, Claude writes the digest; otherwise (or on
@@ -15,10 +15,10 @@ export async function getDigest(period: Period): Promise<Digest> {
   const cached = cache.get(period);
   if (cached) return cached;
 
-  // Live Gmail once Dave has connected Google; otherwise the mock inbox (demo/dev).
+  // Live Gmail (via IMAP) once Dave has connected email; otherwise the mock inbox.
   // ponytail: all three briefs pull the same recent inbox and are flavored by the
   // per-period prompt. Add time-of-day windows later if the split matters.
-  const live = isGoogleConnected();
+  const live = isEmailConfigured();
   const emails = live ? await fetchRecentEmails() : rawInbox(period);
 
   // Claude key from the OS vault first (seeded at install), then env as fallback.
