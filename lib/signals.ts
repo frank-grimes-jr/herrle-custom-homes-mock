@@ -28,9 +28,11 @@ export function validateFindings(raw: unknown, allowedIds: Set<string>): Finding
     : [];
   const out: Finding[] = [];
   for (const item of list) {
+    if (typeof item !== "object" || item === null) continue; // skip malformed row
     const f = item as Record<string, unknown>;
     const prov = Array.isArray(f.provenance)
-      ? (f.provenance as Record<string, unknown>[])
+      ? (f.provenance as unknown[])
+          .filter((p): p is Record<string, unknown> => typeof p === "object" && p !== null)
           .map((p) => ({ id: String(p.id ?? ""), label: String(p.label ?? "") }))
           .filter((p) => p.id)
       : [];
