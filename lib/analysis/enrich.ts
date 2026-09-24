@@ -25,7 +25,7 @@ export function applyEnrichment(threads: ThreadSummary[], raw: unknown): Enriche
   });
 }
 
-const SYSTEM = `Classify email threads for a custom home builder. For each thread return type (one of: commitment, question, scope_change, complaint, fyi, other), entity (the project or client name it concerns, or null), sentiment (positive|neutral|negative), and salient (true only if it likely needs the owner's attention). Return ONLY JSON: {"threads":[{"threadId","type","entity","sentiment","salient"}]}.`;
+const SYSTEM = `Classify email threads for a custom home builder. For each thread return type (one of: commitment, question, scope_change, complaint, fyi, other), entity (the project or client name it concerns, or null), sentiment (positive|neutral|negative), and salient (true only if it likely needs the owner's attention). Return ONLY JSON of this shape: {"threads":[{"threadId":"<the thread id>","type":"scope_change","entity":"Blackledge","sentiment":"neutral","salient":true}]}.`;
 
 function compact(threads: ThreadSummary[]) {
   return threads.map((t) => ({
