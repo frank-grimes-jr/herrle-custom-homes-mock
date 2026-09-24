@@ -57,7 +57,8 @@ async function fetchFolder(client: ImapFlow, mailbox: string, folder: "inbox" | 
         from: parsed.from?.text || "(unknown)",
         subject: parsed.subject || "(no subject)",
         date: (parsed.date ?? new Date()).toISOString(),
-        body: parsed.text || msg.envelope?.subject || "",
+        body: parsed.text || "", // mailparser derives .text from HTML; never fall back to the subject line
+
       });
     }
   } finally {
