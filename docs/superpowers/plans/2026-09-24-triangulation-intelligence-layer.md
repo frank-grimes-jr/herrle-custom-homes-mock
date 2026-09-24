@@ -18,6 +18,7 @@
 - **Copy standard:** no "AI"/vendor badges in user-facing UI. Provenance is the trust signal.
 - **Grounding guardrail:** a finding may only cite source ids present in the bundle; drop any that don't.
 - **Test style:** `node --test` with native TS, assert-based, alongside source (mirror `lib/data/attention.test.ts`, `lib/secrets.test.ts`). Add each new test file to the `test` script in `package.json`.
+- **Import convention (node-testability — confirmed during Task 2):** modules that have a `.test.ts` (`lib/settings.ts`, `lib/signals.ts`, `lib/analysis/*.ts`) MUST NOT `import "server-only"` and MUST use relative imports **with the `.ts` extension** (e.g. `../secrets.ts`, `./types.ts`) — the `@/` alias resolves only under Next, not `node --test`. Route handlers (`app/api/**`) and React components keep `@/` and `import "server-only"`. `tsconfig.json` has `allowImportingTsExtensions: true` (added in Task 2).
 - **Anthropic key:** read via `getSecret(ANTHROPIC_KEY) ?? process.env.ANTHROPIC_API_KEY` (mirror `lib/triage/digest.ts`).
 
 ---
@@ -407,13 +408,13 @@ Then:
 
 ```ts
 // lib/analysis/gather.ts
-import "server-only";
+// Node-testable module: no "server-only", relative .ts imports (see Global Constraints).
 import { ImapFlow } from "imapflow";
 import { simpleParser } from "mailparser";
 import EmailReplyParser from "email-reply-parser";
-import { getSecret, IMAP_USER, IMAP_PASSWORD, IMAP_HOST } from "@/lib/secrets";
-import { getAnalysisSettings } from "@/lib/settings";
-import type { RawMessage, ThreadSummary } from "./types";
+import { getSecret, IMAP_USER, IMAP_PASSWORD, IMAP_HOST } from "../secrets.ts";
+import { getAnalysisSettings } from "../settings.ts";
+import type { RawMessage, ThreadSummary } from "./types.ts";
 
 // Keep only the visible (non-quoted, non-signature) text of a message.
 export function stripQuoted(body: string): string {
@@ -579,11 +580,11 @@ export type EnrichedThread = ThreadSummary & {
 
 ```ts
 // lib/analysis/enrich.ts
-import "server-only";
+// Node-testable module: no "server-only", relative .ts imports (see Global Constraints).
 import Anthropic from "@anthropic-ai/sdk";
-import { getSecret, ANTHROPIC_KEY } from "@/lib/secrets";
-import { getAnalysisSettings } from "@/lib/settings";
-import type { ThreadSummary, EnrichedThread } from "./types";
+import { getSecret, ANTHROPIC_KEY } from "../secrets.ts";
+import { getAnalysisSettings } from "../settings.ts";
+import type { ThreadSummary, EnrichedThread } from "./types.ts";
 
 type Row = { threadId?: string; type?: unknown; entity?: unknown; sentiment?: unknown; salient?: unknown };
 
@@ -704,12 +705,12 @@ Expected: FAIL — cannot find `./reason.ts`.
 
 ```ts
 // lib/analysis/reason.ts
-import "server-only";
+// Node-testable module: no "server-only", relative .ts imports (see Global Constraints).
 import Anthropic from "@anthropic-ai/sdk";
-import { getSecret, ANTHROPIC_KEY } from "@/lib/secrets";
-import { getAnalysisSettings } from "@/lib/settings";
-import { validateFindings } from "@/lib/signals";
-import type { EnrichedThread, Finding } from "./types";
+import { getSecret, ANTHROPIC_KEY } from "../secrets.ts";
+import { getAnalysisSettings } from "../settings.ts";
+import { validateFindings } from "../signals.ts";
+import type { EnrichedThread, Finding } from "./types.ts";
 
 export function bundleIds(threads: EnrichedThread[]): Set<string> {
   const ids = new Set<string>();
