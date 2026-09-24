@@ -3,9 +3,11 @@ import Link from "next/link";
 import { TopNav } from "@/components/TopNav";
 import { SectionCard } from "@/components/SectionCard";
 import { PlaidConnect } from "@/components/admin/PlaidConnect";
+import { Analyze } from "@/components/admin/Analyze";
 import { isEmailConfigured } from "@/lib/email";
 import { isQuickBooksConfigured, isQuickBooksConnected } from "@/lib/quickbooks";
 import { isPlaidConfigured, isPlaidConnected } from "@/lib/plaid";
+import { getAnalysisSettings, DEFAULT_SETTINGS } from "@/lib/settings";
 
 export const dynamic = "force-dynamic"; // reflect live vault state on every request
 
@@ -17,17 +19,19 @@ const MESSAGES: Record<string, string> = {
   configured: "credentials saved — you can connect now.",
   not_configured: "needs credentials first.",
   error: "couldn’t connect. Please check the details and try again.",
+  saved: "settings saved.",
 };
 const PROVIDER_NAMES: Record<string, string> = {
   email: "Email",
   quickbooks: "QuickBooks",
   plaid: "Bank",
+  analysis: "Analysis",
 };
 
-type SP = { email?: string; quickbooks?: string; plaid?: string };
+type SP = { email?: string; quickbooks?: string; plaid?: string; analysis?: string };
 
 function statusNotice(sp: SP): string | null {
-  for (const key of ["email", "quickbooks", "plaid"] as const) {
+  for (const key of ["email", "quickbooks", "plaid", "analysis"] as const) {
     const v = sp[key];
     if (v && MESSAGES[v]) return `${PROVIDER_NAMES[key]} ${MESSAGES[v]}`;
   }
@@ -41,6 +45,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const email = isEmailConfigured();
   const qbo = { configured: isQuickBooksConfigured(), connected: isQuickBooksConnected() };
   const plaid = { configured: isPlaidConfigured(), connected: isPlaidConnected() };
+  const settings = getAnalysisSettings();
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-8 md:px-8">
@@ -178,6 +183,71 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           </div>
         </SectionCard>
       )}
+
+      {/* Analysis */}
+      <SectionCard title="Analysis" className="mt-6">
+        {isEmailConfigured() ? (
+          <Analyze className="rounded-lg bg-primary px-4 py-2 text-sm text-canvas hover:opacity-90" />
+        ) : (
+          <p className="text-sm text-muted">Connect email above to enable analysis.</p>
+        )}
+        <form method="post" action="/api/analysis/settings" className="mt-6 grid gap-3 sm:max-w-xl">
+          <label className="grid gap-1 text-sm">
+            <span className="text-muted">Reasoning model</span>
+            <select
+              name="reasonModel"
+              defaultValue={settings.reasonModel}
+              className="rounded-lg border border-line bg-surface px-3 py-2 text-ink"
+            >
+              <option value="claude-opus-4-8">Claude Opus 4.8 (default)</option>
+              <option value="claude-opus-5-5">Claude Opus 5.5</option>
+            </select>
+          </label>
+          <input type="hidden" name="enrichModel" value={settings.enrichModel} />
+          <div className="grid grid-cols-2 gap-3">
+            <label className="grid gap-1 text-sm">
+              <span className="text-muted">Window (days)</span>
+              <input
+                name="windowDays"
+                type="number"
+                defaultValue={settings.windowDays}
+                className="rounded-lg border border-line bg-surface px-3 py-2 text-ink"
+              />
+            </label>
+            <label className="grid gap-1 text-sm">
+              <span className="text-muted">Max threads</span>
+              <input
+                name="maxThreads"
+                type="number"
+                defaultValue={settings.maxThreads}
+                className="rounded-lg border border-line bg-surface px-3 py-2 text-ink"
+              />
+            </label>
+          </div>
+          <label className="grid gap-1 text-sm">
+            <span className="text-muted">Reasoning prompt</span>
+            <textarea
+              name="systemPrompt"
+              rows={8}
+              defaultValue={settings.systemPrompt}
+              className="rounded-lg border border-line bg-surface px-3 py-2 font-mono text-xs text-ink"
+            />
+          </label>
+          <div className="flex gap-3">
+            <button className="justify-self-start rounded-lg bg-primary px-4 py-2 text-sm text-canvas hover:opacity-90">
+              Save analysis settings
+            </button>
+            <button
+              name="systemPrompt"
+              value={DEFAULT_SETTINGS.systemPrompt}
+              formNoValidate
+              className="rounded-lg border border-line px-4 py-2 text-sm text-ink hover:bg-surface-2"
+            >
+              Reset prompt to default
+            </button>
+          </div>
+        </form>
+      </SectionCard>
     </main>
   );
 }
