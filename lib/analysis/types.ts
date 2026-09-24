@@ -29,3 +29,10 @@ export type ThreadSummary = {
   participants: string[];
   turns: { id: string; from: string; date: string; text: string }[];
 };
+
+export type EnrichedThread = ThreadSummary & {
+  type: string;
+  entity: string | null;
+  sentiment: "positive" | "neutral" | "negative";
+  salient: boolean;
+};
