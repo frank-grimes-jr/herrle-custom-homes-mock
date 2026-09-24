@@ -1,12 +1,16 @@
 import { getDashboard } from "@/lib/data";
+import { visibleFindings } from "@/lib/signals";
 import { TopNav } from "@/components/TopNav";
 import { AttentionPanel } from "@/components/AttentionPanel";
+import { AnalysisFindings } from "@/components/AnalysisFindings";
 import { FinancialsSection } from "@/components/FinancialsSection";
 import { ProjectsSection } from "@/components/ProjectsSection";
 import { PipelineSection } from "@/components/PipelineSection";
 import { ClientsSection } from "@/components/ClientsSection";
 import { TeamSection } from "@/components/TeamSection";
 import { SignaturesSection } from "@/components/SignaturesSection";
+
+export const dynamic = "force-dynamic";
 
 export default async function Page() {
   const d = await getDashboard();
@@ -23,6 +27,7 @@ export default async function Page() {
 
       <div className="space-y-5">
         <AttentionPanel items={d.attention} projectsOnTrack={onTrack} projectsTotal={d.projects.length} />
+        <AnalysisFindings findings={visibleFindings()} />
 
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <div className="lg:col-span-2">
