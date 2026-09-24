@@ -210,6 +210,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               <input
                 name="windowDays"
                 type="number"
+                min="1"
+                required
                 defaultValue={settings.windowDays}
                 className="rounded-lg border border-line bg-surface px-3 py-2 text-ink"
               />
@@ -219,6 +221,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               <input
                 name="maxThreads"
                 type="number"
+                min="1"
+                required
                 defaultValue={settings.maxThreads}
                 className="rounded-lg border border-line bg-surface px-3 py-2 text-ink"
               />
