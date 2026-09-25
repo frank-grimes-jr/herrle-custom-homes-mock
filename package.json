@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start -H 127.0.0.1 -p 3000",
     "lint": "eslint",
-    "test": "node --test lib/data/attention.test.ts lib/secrets.test.ts lib/settings.test.ts lib/signals.test.ts lib/analysis/gather.test.ts lib/analysis/enrich.test.ts lib/analysis/reason.test.ts lib/claude.test.ts scripts/supervisor.test.mjs"
+    "test": "node --test lib/data/attention.test.ts lib/secrets.test.ts lib/settings.test.ts lib/signals.test.ts lib/analysis/gather.test.ts lib/analysis/enrich.test.ts lib/analysis/reason.test.ts lib/claude.test.ts lib/email.test.ts lib/triage/feedback.test.ts scripts/supervisor.test.mjs"
   },
   "dependencies": {
     "@napi-rs/keyring": "^2.1.0",

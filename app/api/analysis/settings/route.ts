@@ -1,6 +1,6 @@
 import "server-only";
-import { NextResponse } from "next/server";
 import { saveAnalysisSettings } from "@/lib/settings";
+import { redirectTo } from "@/lib/redirect";
 
 export async function POST(request: Request) {
   const form = await request.formData();
@@ -11,5 +11,5 @@ export async function POST(request: Request) {
     windowDays: Number(form.get("windowDays")) || 30,
     maxThreads: Number(form.get("maxThreads")) || 40,
   });
-  return NextResponse.redirect(new URL("/admin?analysis=saved", request.url), { status: 303 });
+  return redirectTo("/admin?analysis=saved");
 }

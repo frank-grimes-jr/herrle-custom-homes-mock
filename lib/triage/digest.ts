@@ -5,6 +5,7 @@ import { buildSampleDigest, rawInbox } from "./mock";
 import { fetchRecentEmails, isEmailConfigured } from "@/lib/email";
 import { askClaude } from "@/lib/claude";
 import { getAnalysisSettings } from "@/lib/settings";
+import { address, lessons, loadVotes, mutedSenders } from "./feedback";
 
 // Hybrid: Claude (via this computer's Claude Code sign-in) writes the digest;
 // otherwise (or on any failure) the deterministic sample renders so the page
@@ -14,6 +15,11 @@ const cache = new Map<Period, Digest>();
 // page load doesn't wait on a call that will fail again.
 let claudeDownUntil = 0;
 
+// A vote changes what the next brief should look like, so rebuild on next load.
+export function clearDigestCache(): void {
+  cache.clear();
+}
+
 export async function getDigest(period: Period): Promise<Digest> {
   const cached = cache.get(period);
   if (cached) return cached;
@@ -22,11 +28,13 @@ export async function getDigest(period: Period): Promise<Digest> {
   // ponytail: all three briefs pull the same recent inbox and are flavored by the
   // per-period prompt. Add time-of-day windows later if the split matters.
   const live = isEmailConfigured();
-  const emails = live ? await fetchRecentEmails() : rawInbox(period);
+  const votes = loadVotes();
+  const muted = mutedSenders(votes);
+  const emails = (live ? await fetchRecentEmails() : rawInbox(period)).filter((e) => !muted.has(address(e.from)));
 
   if (emails.length > 0 && Date.now() >= claudeDownUntil) {
     try {
-      const digest = await generateWithClaude(period, emails);
+      const digest = await generateWithClaude(period, emails, lessons(votes));
       cache.set(period, digest); // only cache real successes → transient errors can retry
       return digest;
     } catch (err) {
@@ -43,7 +51,9 @@ const SYSTEM = `You are the chief of staff for Dave Herrle, owner of Herrle Cust
 
 Your job is to INTERPRET, not list. Read the emails and tell Dave what actually matters: who needs him, who's unhappy, what decision is waiting, what can wait. Connect related threads (e.g. a client complaint and the vendor delay that caused it). Be direct and plain-spoken. Recommend a concrete next action wherever one is warranted.
 
-Sort every email into exactly one bucket:
+LEAVE OUT anything Dave would not want to see: marketing, promotions, ads, newsletters, sales pitches, receipts, shipping notices, automated alerts, and personal mail unrelated to the business — unless it genuinely needs him (e.g. a failed payment, a permit or inspection notice). Leaving things out is expected; an empty brief is fine.
+
+Sort every email you keep into exactly one bucket:
 - "needs_you": needs Dave's action, decision, or reply.
 - "sentiment": notable tone (especially a frustrated or worried client) he should be aware of, even if no action is strictly required.
 - "fyi": informational or easily handled/delegated.
@@ -75,10 +85,10 @@ function userPrompt(period: Period, emails: Email[]): string {
   )}\n\nWrite Dave's ${period} brief as JSON.`;
 }
 
-async function generateWithClaude(period: Period, emails: Email[]): Promise<Digest> {
+async function generateWithClaude(period: Period, emails: Email[], learned: string): Promise<Digest> {
   const text = await askClaude({
     model: getAnalysisSettings().reasonModel, // one model switch (Admin) for all of Claude's work
-    system: SYSTEM,
+    system: SYSTEM + learned,
     prompt: userPrompt(period, emails),
     effort: "medium",
   });
@@ -133,7 +143,6 @@ function normalize(period: Period, raw: unknown, emails: Email[]): Digest {
     .filter((s) => s.items.length > 0);
 
   const all = sections.flatMap((s) => s.items);
-  if (all.length === 0) throw new Error("model output produced no usable items");
 
   return {
     period,
@@ -162,7 +171,7 @@ function basicDigest(period: Period, emails: Email[]): Digest {
     subject: e.subject,
     project: e.project,
     sentiment: "neutral",
-    urgency: "medium",
+    urgency: "low",
     summary: e.subject,
   }));
   return {
@@ -171,6 +180,7 @@ function basicDigest(period: Period, emails: Email[]): Digest {
     source: "sample",
     headline: `Recent inbox — ${emails.length} message${emails.length === 1 ? "" : "s"}.`,
     counts: { total: emails.length, needsYou: 0, flagged: 0 },
-    sections: items.length ? [{ key: "needs_you", title: SECTION_TITLES.needs_you, items }] : [],
+    // Uninterpreted → never claim it needs Dave; it's just the (bulk-filtered) inbox.
+    sections: items.length ? [{ key: "fyi", title: SECTION_TITLES.fyi, items }] : [],
   };
 }

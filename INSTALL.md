@@ -46,8 +46,10 @@ previous git + npm setup (its two scheduled tasks and its
 ## Connect the data sources
 
 **Email** needs no provider registration. On the ⚙ Admin page, Dave enters his
-Gmail address and a 16-character **App Password** (Google Account → Security →
-App passwords; requires 2-Step Verification). Access is read-only over IMAP,
+Gmail address and a 16-character **App Password**, created at
+<https://myaccount.google.com/apppasswords>. Google no longer lists that page
+in the Security menu, and it only works once 2-Step Verification is on. The
+Admin form links to it. Access is read-only over IMAP,
 with no Google Cloud project, and the dashboard verifies the login before
 saving.
 

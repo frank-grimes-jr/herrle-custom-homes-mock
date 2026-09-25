@@ -75,6 +75,7 @@ export async function gatherEmail(): Promise<ThreadSummary[]> {
   const { windowDays, maxThreads } = getAnalysisSettings();
   const host = getSecret(IMAP_HOST) || DEFAULT_HOST;
   const client = new ImapFlow({ host, port: 993, secure: true, auth: { user, pass }, logger: false });
+  client.on("error", (err) => console.error("[analysis] imap connection error:", err.message)); // unheard = uncaught exception
 
   const msgs: RawMessage[] = [];
   await client.connect();
