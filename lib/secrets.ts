@@ -25,8 +25,7 @@ export const PLAID_SECRET = "plaid_secret";
 export const PLAID_ENV = "plaid_env"; // "sandbox" | "production"
 export const PLAID_ACCESS_TOKEN = "plaid_access_token";
 export const PLAID_ITEM_ID = "plaid_item_id";
-
-export const ANTHROPIC_KEY = "anthropic_api_key"; // powers the inbox/intelligence
+// No Claude key: Claude runs through this computer's Claude Code sign-in (lib/claude.ts).
 
 export function getSecret(key: string): string | null {
   try {

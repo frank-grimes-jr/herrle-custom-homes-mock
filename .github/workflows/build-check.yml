@@ -1,9 +1,8 @@
 name: Build check
 
-# Validates every commit to main so Dave's laptop only auto-pulls green builds.
+# Validates pull requests into main. (Merges to main are built, smoke-tested and
+# published by release.yml — the only builds Dave's laptop ever installs.)
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:

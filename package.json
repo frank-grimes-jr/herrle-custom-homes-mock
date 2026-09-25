@@ -6,12 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start -H 127.0.0.1 -p 3000",
-    "update": "node scripts/update.mjs",
     "lint": "eslint",
-    "test": "node --test lib/data/attention.test.ts lib/secrets.test.ts lib/settings.test.ts lib/signals.test.ts lib/analysis/gather.test.ts lib/analysis/enrich.test.ts lib/analysis/reason.test.ts"
+    "test": "node --test lib/data/attention.test.ts lib/secrets.test.ts lib/settings.test.ts lib/signals.test.ts lib/analysis/gather.test.ts lib/analysis/enrich.test.ts lib/analysis/reason.test.ts lib/claude.test.ts scripts/supervisor.test.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.125.0",
     "@napi-rs/keyring": "^2.1.0",
     "email-reply-parser": "^2.3.9",
     "imapflow": "^2.0.6",

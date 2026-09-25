@@ -1,15 +1,18 @@
 import "server-only";
-import Anthropic from "@anthropic-ai/sdk";
 import type { Bucket, Digest, DigestItem, Email, Period } from "./types";
 import { SECTION_TITLES } from "./types";
 import { buildSampleDigest, rawInbox } from "./mock";
 import { fetchRecentEmails, isEmailConfigured } from "@/lib/email";
-import { getSecret, ANTHROPIC_KEY } from "@/lib/secrets";
+import { askClaude } from "@/lib/claude";
+import { getAnalysisSettings } from "@/lib/settings";
 
-// Hybrid: with an ANTHROPIC_API_KEY, Claude writes the digest; otherwise (or on
-// any failure) the deterministic sample renders so the page always works.
-// Successful Claude results are cached per period so we don't re-bill on reload.
+// Hybrid: Claude (via this computer's Claude Code sign-in) writes the digest;
+// otherwise (or on any failure) the deterministic sample renders so the page
+// always works. Successes are cached per period so reloads don't re-run it.
 const cache = new Map<Period, Digest>();
+// After a failure (signed out / not installed) skip Claude for a while so every
+// page load doesn't wait on a call that will fail again.
+let claudeDownUntil = 0;
 
 export async function getDigest(period: Period): Promise<Digest> {
   const cached = cache.get(period);
@@ -21,14 +24,13 @@ export async function getDigest(period: Period): Promise<Digest> {
   const live = isEmailConfigured();
   const emails = live ? await fetchRecentEmails() : rawInbox(period);
 
-  // Claude key from the OS vault first (seeded at install), then env as fallback.
-  const apiKey = getSecret(ANTHROPIC_KEY) ?? process.env.ANTHROPIC_API_KEY;
-  if (apiKey && emails.length > 0) {
+  if (emails.length > 0 && Date.now() >= claudeDownUntil) {
     try {
-      const digest = await generateWithClaude(period, emails, apiKey);
+      const digest = await generateWithClaude(period, emails);
       cache.set(period, digest); // only cache real successes → transient errors can retry
       return digest;
     } catch (err) {
+      claudeDownUntil = Date.now() + 10 * 60_000;
       console.error("[triage] Claude digest failed; falling back:", err);
     }
   }
@@ -73,24 +75,14 @@ function userPrompt(period: Period, emails: Email[]): string {
   )}\n\nWrite Dave's ${period} brief as JSON.`;
 }
 
-async function generateWithClaude(period: Period, emails: Email[], apiKey: string): Promise<Digest> {
-  const client = new Anthropic({ apiKey });
-  const res = await client.messages.create({
-    model: "claude-opus-5",
-    max_tokens: 4000,
-    thinking: { type: "adaptive" },
-    output_config: { effort: "medium" },
+async function generateWithClaude(period: Period, emails: Email[]): Promise<Digest> {
+  const text = await askClaude({
+    model: getAnalysisSettings().reasonModel, // one model switch (Admin) for all of Claude's work
     system: SYSTEM,
-    messages: [{ role: "user", content: userPrompt(period, emails) }],
+    prompt: userPrompt(period, emails),
+    effort: "medium",
   });
-
-  const text = res.content
-    .filter((b): b is Anthropic.TextBlock => b.type === "text")
-    .map((b) => b.text)
-    .join("")
-    .trim();
-
-  const parsed = extractJson(text);
+  const parsed = extractJson(text.trim());
   return normalize(period, parsed, emails);
 }
 

@@ -191,6 +191,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         ) : (
           <p className="text-sm text-muted">Connect email above to enable analysis.</p>
         )}
+        <p className="mt-2 text-xs text-muted">Uses this computer&rsquo;s Claude Code sign-in.</p>
         <form method="post" action="/api/analysis/settings" className="mt-6 grid gap-3 sm:max-w-xl">
           <label className="grid gap-1 text-sm">
             <span className="text-muted">Reasoning model</span>
@@ -252,6 +253,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           </div>
         </form>
       </SectionCard>
+
+      {/* Set by scripts/supervisor.mjs — shows which build auto-update has installed. */}
+      {process.env.HERRLE_VERSION && (
+        <p className="mt-6 text-xs text-muted">Version {process.env.HERRLE_VERSION}</p>
+      )}
     </main>
   );
 }

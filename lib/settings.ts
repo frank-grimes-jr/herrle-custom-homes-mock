@@ -1,6 +1,6 @@
 // lib/settings.ts
 // Non-secret analysis settings (model, prompt, caps). Stored as JSON in a
-// user-data dir OUTSIDE the repo so the git auto-update never clobbers edits.
+// user-data dir OUTSIDE the app folder so auto-updates never clobber edits.
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
@@ -10,7 +10,6 @@ export type AnalysisSettings = {
   systemPrompt: string;
   windowDays: number;
   maxThreads: number;
-  maxTokens: number;
 };
 
 export const DEFAULT_SETTINGS: AnalysisSettings = {
@@ -18,7 +17,6 @@ export const DEFAULT_SETTINGS: AnalysisSettings = {
   enrichModel: "claude-haiku-4-5",
   windowDays: 30,
   maxThreads: 40,
-  maxTokens: 8000,
   systemPrompt: `You are Dave Herrle's chief of staff at Herrle Custom Homes, a small high-craft custom home builder. You are given recent email threads (inbox + sent), each already tagged with a type, the project/client it concerns, and a sentiment. Find the few things Dave genuinely would not catch on his own. Focus on:
 - Dropped commitments: promises Dave made in SENT mail ("I'll send that Friday") with no visible follow-through.
 - Cooling relationships: a client whose tone is trending negative or who has gone quiet.
