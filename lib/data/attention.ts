@@ -9,10 +9,10 @@ import type {
 } from "./types";
 
 export type AttentionInput = {
-  financials: Financials;
+  financials: Financials | null; // null = not connected → no financial rules
   projects: Project[];
   clients: Client[];
-  team: Team;
+  team: Team | null;
   signatures: SignatureDoc[];
   subs: Sub[];
 };
@@ -56,7 +56,7 @@ export function deriveAttention(d: AttentionInput): AttentionItem[] {
   const { financials: f } = d;
 
   // — Financials —
-  if (f.ar.over90 >= T.arOver90Escalate) {
+  if (f && f.ar.over90 >= T.arOver90Escalate) {
     push({
       id: "fin-ar90",
       severity: "escalate",
@@ -66,7 +66,7 @@ export function deriveAttention(d: AttentionInput): AttentionItem[] {
     });
   }
   // Cash-flow forecast: flag the coming low point (supersedes a raw runway ratio).
-  if (f.cashForecast.length > 0) {
+  if (f && f.cashForecast.length > 0) {
     let min = f.cashForecast[0];
     for (const w of f.cashForecast) if (w.balance < min.balance) min = w;
     if (min.balance < T.cashFloorEscalate) {
@@ -76,8 +76,8 @@ export function deriveAttention(d: AttentionInput): AttentionItem[] {
     }
   }
 
-  const marginGap = f.targetMarginPct - f.grossMarginPct;
-  if (marginGap >= T.marginBelowTargetEscalate) {
+  const marginGap = f ? f.targetMarginPct - f.grossMarginPct : 0;
+  if (f && marginGap >= T.marginBelowTargetEscalate) {
     push({
       id: "fin-margin",
       severity: "escalate",
@@ -85,7 +85,7 @@ export function deriveAttention(d: AttentionInput): AttentionItem[] {
       title: "Gross margin well below target",
       detail: `${f.grossMarginPct.toFixed(1)}% vs ${f.targetMarginPct}% target.`,
     });
-  } else if (marginGap >= T.marginBelowTargetWatch) {
+  } else if (f && marginGap >= T.marginBelowTargetWatch) {
     push({
       id: "fin-margin",
       severity: "watch",
@@ -193,7 +193,7 @@ export function deriveAttention(d: AttentionInput): AttentionItem[] {
   }
 
   // — Team / tools —
-  if (d.team.claudeSeatsActive < d.team.claudeSeats) {
+  if (d.team && d.team.claudeSeatsActive < d.team.claudeSeats) {
     const idle = d.team.claudeSeats - d.team.claudeSeatsActive;
     push({
       id: "team-tools",

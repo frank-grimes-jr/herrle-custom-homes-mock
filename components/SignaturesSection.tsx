@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { SignatureDoc } from "@/lib/data/types";
 import { fmtUSD } from "@/lib/format";
-import { SectionCard } from "./SectionCard";
+import { NotConnected, SectionCard } from "./SectionCard";
 
 const statusMeta: Record<SignatureDoc["status"], { label: string; text: string; dot: string }> = {
   signed: { label: "Signed", text: "text-sage", dot: "bg-sage" },
@@ -16,6 +16,7 @@ export function SignaturesSection({ docs }: { docs: SignatureDoc[] }) {
       title="Documents & signatures"
       right={`${pending} awaiting signature`}
     >
+      {docs.length === 0 && <NotConnected what="documents" />}
       <ul className="divide-y divide-line">
         {docs.map((d) => {
           const s = statusMeta[d.status];

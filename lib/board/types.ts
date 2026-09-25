@@ -26,7 +26,7 @@ export type StandupTopic = {
 };
 
 export type Standup = {
-  source: "claude" | "sample";
+  source: "claude" | "basic";
   generatedAt: string;
   intro: string;
   topics: StandupTopic[];

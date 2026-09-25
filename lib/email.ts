@@ -71,7 +71,7 @@ export function isBulk(headers: Map<string, unknown>): boolean {
 
 // Recent person-to-person inbox mapped to the Email shape the digest expects.
 // Scans the last `scan` messages, skips bulk mail, keeps the newest `max`.
-// Returns [] when email isn't set up, so the caller falls back to the mock inbox.
+// Returns [] when email isn't set up, so the caller shows an empty brief.
 export async function fetchRecentEmails(max = 15, scan = 75): Promise<Email[]> {
   const user = getSecret(IMAP_USER);
   const pass = getSecret(IMAP_PASSWORD);

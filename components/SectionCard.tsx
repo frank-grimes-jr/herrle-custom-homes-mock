@@ -23,3 +23,8 @@ export function SectionCard({
     </section>
   );
 }
+
+// Shown in place of a section's body until its data source is connected.
+export function NotConnected({ what }: { what: string }) {
+  return <p className="py-3 text-sm text-muted">No {what} yet — connect a source in Admin.</p>;
+}

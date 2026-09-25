@@ -1,10 +1,11 @@
 import type { Client } from "@/lib/data/types";
 import { sentimentMeta } from "@/lib/ui";
-import { SectionCard } from "./SectionCard";
+import { NotConnected, SectionCard } from "./SectionCard";
 
 export function ClientsSection({ clients }: { clients: Client[] }) {
   return (
     <SectionCard title="Clients" right={`${clients.length} active`}>
+      {clients.length === 0 && <NotConnected what="client data" />}
       <ul className="divide-y divide-line">
         {clients.map((c) => {
           const s = sentimentMeta[c.sentiment];

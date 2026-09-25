@@ -1,7 +1,7 @@
-// Data adapters. Every domain is read through one getX() function.
-// TODAY these return mock data. To wire a live source LATER, change ONLY the
-// body of the relevant function (e.g. getFinancials → call QuickBooks;
-// getProjects → read the Google Sheet). The UI never changes.
+// Data adapters. Every domain is read through one getX() function; to wire a
+// live source, change ONLY the body of that function. The UI never changes.
+// Until a source is connected, objects are null and lists are empty — the UI
+// shows "not connected" rather than inventing numbers.
 import type {
   DashboardData,
   Financials,
@@ -12,29 +12,28 @@ import type {
   SignatureDoc,
   Sub,
 } from "./types";
-import * as mock from "./mock";
 import { deriveAttention } from "./attention";
 
-export async function getFinancials(): Promise<Financials> {
-  return mock.financials; // live: accounting API (QuickBooks Online, etc.)
+export async function getFinancials(): Promise<Financials | null> {
+  return null; // live: QuickBooks / Plaid (connected in Admin; reader not built yet)
 }
 export async function getProjects(): Promise<Project[]> {
-  return mock.projects; // live: Google Sheets (project tracker)
+  return []; // live: Google Sheets (project tracker)
 }
 export async function getClients(): Promise<Client[]> {
-  return mock.clients; // live: Sheets / CRM
+  return []; // live: Sheets / CRM
 }
-export async function getPipeline(): Promise<Pipeline> {
-  return mock.pipeline; // live: Docusign + Sheets
+export async function getPipeline(): Promise<Pipeline | null> {
+  return null; // live: Docusign + Sheets
 }
-export async function getTeam(): Promise<Team> {
-  return mock.team; // live: Claude usage analytics + Sheets
+export async function getTeam(): Promise<Team | null> {
+  return null; // live: Claude usage analytics + Sheets
 }
 export async function getSignatures(): Promise<SignatureDoc[]> {
-  return mock.signatures; // live: Docusign eSignature API
+  return []; // live: Docusign eSignature API
 }
 export async function getSubs(): Promise<Sub[]> {
-  return mock.subs; // live: COI tracking / Sheets
+  return []; // live: COI tracking / Sheets
 }
 
 export async function getDashboard(): Promise<DashboardData> {

@@ -3,7 +3,7 @@ import { ChevronRight } from "lucide-react";
 import type { Project } from "@/lib/data/types";
 import { fmtUSD } from "@/lib/format";
 import { scheduleMeta } from "@/lib/ui";
-import { SectionCard } from "./SectionCard";
+import { NotConnected, SectionCard } from "./SectionCard";
 import { Bar } from "./Bar";
 
 function budgetColor(p: Project): string {
@@ -16,6 +16,7 @@ function budgetColor(p: Project): string {
 export function ProjectsSection({ projects }: { projects: Project[] }) {
   return (
     <SectionCard title="Active projects" right={`${projects.length} builds`}>
+      {projects.length === 0 && <NotConnected what="active projects" />}
       <ul className="divide-y divide-line">
         {projects.map((p) => {
           const sched = scheduleMeta[p.schedule];

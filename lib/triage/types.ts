@@ -49,7 +49,7 @@ export type DigestSection = {
 export type Digest = {
   period: Period;
   generatedAt: string;
-  source: "claude" | "sample"; // which brain wrote it
+  source: "claude" | "basic"; // basic = uninterpreted inbox list
   headline: string; // the narrative brief
   counts: { total: number; needsYou: number; flagged: number };
   sections: DigestSection[];

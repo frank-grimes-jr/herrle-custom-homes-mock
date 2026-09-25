@@ -1,10 +1,16 @@
 import type { Team } from "@/lib/data/types";
 import { fmtPct } from "@/lib/format";
-import { SectionCard } from "./SectionCard";
+import { NotConnected, SectionCard } from "./SectionCard";
 import { Bar } from "./Bar";
 import TrendArea from "./TrendArea";
 
-export function TeamSection({ team }: { team: Team }) {
+export function TeamSection({ team }: { team: Team | null }) {
+  if (!team || team.members.length === 0)
+    return (
+      <SectionCard title="Team">
+        <NotConnected what="team data" />
+      </SectionCard>
+    );
   const avgUtil = Math.round(
     team.members.reduce((s, m) => s + m.utilizationPct, 0) / team.members.length,
   );

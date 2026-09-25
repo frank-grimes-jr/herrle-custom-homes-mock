@@ -1,15 +1,14 @@
 import "server-only";
 import type { Bucket, Digest, DigestItem, Email, Period } from "./types";
 import { SECTION_TITLES } from "./types";
-import { buildSampleDigest, rawInbox } from "./mock";
 import { fetchRecentEmails, isEmailConfigured } from "@/lib/email";
 import { askClaude } from "@/lib/claude";
 import { getAnalysisSettings } from "@/lib/settings";
 import { address, lessons, loadVotes, mutedSenders } from "./feedback";
 
-// Hybrid: Claude (via this computer's Claude Code sign-in) writes the digest;
-// otherwise (or on any failure) the deterministic sample renders so the page
-// always works. Successes are cached per period so reloads don't re-run it.
+// Claude (via this computer's Claude Code sign-in) writes the digest; without
+// it (or on any failure) the real inbox renders as a plain list. Successes are
+// cached per period so reloads don't re-run it.
 const cache = new Map<Period, Digest>();
 // After a failure (signed out / not installed) skip Claude for a while so every
 // page load doesn't wait on a call that will fail again.
@@ -24,13 +23,13 @@ export async function getDigest(period: Period): Promise<Digest> {
   const cached = cache.get(period);
   if (cached) return cached;
 
-  // Live Gmail (via IMAP) once Dave has connected email; otherwise the mock inbox.
+  if (!isEmailConfigured()) return emptyDigest(period, "Email isn't connected yet — set it up in Admin.");
+
   // ponytail: all three briefs pull the same recent inbox and are flavored by the
   // per-period prompt. Add time-of-day windows later if the split matters.
-  const live = isEmailConfigured();
   const votes = loadVotes();
   const muted = mutedSenders(votes);
-  const emails = (live ? await fetchRecentEmails() : rawInbox(period)).filter((e) => !muted.has(address(e.from)));
+  const emails = (await fetchRecentEmails()).filter((e) => !muted.has(address(e.from)));
 
   if (emails.length > 0 && Date.now() >= claudeDownUntil) {
     try {
@@ -42,9 +41,8 @@ export async function getDigest(period: Period): Promise<Digest> {
       console.error("[triage] Claude digest failed; falling back:", err);
     }
   }
-  // No summarizer (or it failed): the mock has a hand-written sample; real email
-  // degrades to a plain list so we never show mock data as if it were the inbox.
-  return live ? basicDigest(period, emails) : buildSampleDigest(period);
+  // No summarizer (or it failed): a plain list of the real inbox.
+  return basicDigest(period, emails);
 }
 
 const SYSTEM = `You are the chief of staff for Dave Herrle, owner of Herrle Custom Homes, a small high-craft custom home builder on the Connecticut shoreline. You triage his inbox three times a day and brief him like a sharp, trusted right hand — not an inbox manager.
@@ -105,7 +103,7 @@ function extractJson(text: string): unknown {
 }
 
 // Coerce model output into a Digest, backfilling from/subject/project from the
-// source emails. Throws if the shape is unusable (→ caller falls back to sample).
+// source emails. Throws if the shape is unusable (→ caller falls back to a plain list).
 function normalize(period: Period, raw: unknown, emails: Email[]): Digest {
   const data = raw as { headline?: unknown; sections?: unknown };
   if (typeof data.headline !== "string" || !Array.isArray(data.sections)) {
@@ -163,8 +161,9 @@ function coerce<T extends string>(v: unknown, allowed: T[], fallback: T): T {
 }
 
 // Plain, honest list of real emails when no summarizer is available — no
-// interpretation, no invented urgency, and never mock data.
+// interpretation, no invented urgency.
 function basicDigest(period: Period, emails: Email[]): Digest {
+  if (emails.length === 0) return emptyDigest(period, "Nothing new in the inbox.");
   const items: DigestItem[] = emails.map((e) => ({
     emailId: e.id,
     from: e.from,
@@ -177,10 +176,21 @@ function basicDigest(period: Period, emails: Email[]): Digest {
   return {
     period,
     generatedAt: new Date().toISOString(),
-    source: "sample",
+    source: "basic",
     headline: `Recent inbox — ${emails.length} message${emails.length === 1 ? "" : "s"}.`,
     counts: { total: emails.length, needsYou: 0, flagged: 0 },
     // Uninterpreted → never claim it needs Dave; it's just the (bulk-filtered) inbox.
     sections: items.length ? [{ key: "fyi", title: SECTION_TITLES.fyi, items }] : [],
+  };
+}
+
+function emptyDigest(period: Period, headline: string): Digest {
+  return {
+    period,
+    generatedAt: new Date().toISOString(),
+    source: "basic",
+    headline,
+    counts: { total: 0, needsYou: 0, flagged: 0 },
+    sections: [],
   };
 }

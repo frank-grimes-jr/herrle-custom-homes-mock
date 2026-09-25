@@ -1,43 +1,33 @@
-# Herrle Custom Homes — executive dashboard (mock)
+# Herrle Custom Homes — executive dashboard
 
-An interactive prototype of a "single pane of glass" for Herrle Custom Homes:
-a snapshot of company health, a personal effort board, and an AI email brief —
-built to feel like the brand ("Built with intention"), not generic SaaS.
-
-**Live:** https://frank-grimes-jr.github.io/herrle-custom-homes-mock/
-
-All figures and inboxes are **synthetic sample data**.
+A "single pane of glass" for Herrle Custom Homes: company health, a personal
+effort board, and an email brief. Runs locally on Dave's laptop and updates
+itself from GitHub Releases — see [INSTALL.md](INSTALL.md).
 
 ## What's in it
 
-- **Overview** (`/`) — an attention-first health dashboard: what needs Dave's
+- **Overview** (`/`) — attention-first health dashboard: what needs Dave's
   attention vs. what's on track, plus financials, projects, pipeline, clients,
-  team (incl. Claude adoption) and signatures.
-- **Board** (`/board`) — Dave's board of high-level business efforts (not
-  projects). Bespoke lanes, drag cards forward, and a **Run standup** button
-  that surfaces topics worth bringing to the team (board + live escalations).
-- **Inbox** (`/triage`) — morning / afternoon / evening email briefs that
-  interpret and prioritize, with sentiment, urgency and suggested actions.
+  team and signatures. Each section reads from a data source connected in
+  Admin; until one is connected the section says so.
+- **Board** (`/board`) — Dave's board of high-level business efforts. Bespoke
+  lanes, drag cards forward, and **Run standup** to pull topics worth bringing
+  to the team (board + live escalations).
+- **Inbox** (`/triage`) — morning / afternoon / evening briefs of the connected
+  Gmail inbox, interpreted by Claude through this computer's **Claude Code
+  sign-in** (no API key). Without Claude it shows a plain list.
+- **Admin** (`/admin`) — connect email, QuickBooks and bank; analysis settings.
 
-## Live AI (optional)
-
-The Inbox briefs and the standup ship with deterministic **sample** output so
-the site works with zero setup. In the local app, the briefs and the Analysis
-are written by Claude through the computer's **Claude Code sign-in** (the
-`claude` CLI, run headless) — no API key. GitHub Pages is static, so the hosted
-site always shows the samples.
-
-## Run locally
+## Develop
 
 ```bash
 npm install
 npm run dev        # http://localhost:3000
 ```
 
-Other scripts: `npm run build` (static export to `out/`), `npm test`
-(escalation-logic checks).
+`npm test` runs the escalation-logic and module checks; `npm run build` makes
+the standalone server build that CI packages into a release.
 
 ## Stack
 
-Next.js 16 (App Router, static export) · TypeScript · Tailwind CSS v4 ·
-Recharts · Anthropic SDK. Deployed to GitHub Pages via GitHub Actions.
+Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · Recharts.

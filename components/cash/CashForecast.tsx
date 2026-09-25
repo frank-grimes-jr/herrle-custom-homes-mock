@@ -1,12 +1,18 @@
 import type { Financials } from "@/lib/data/types";
 import { fmtUSD } from "@/lib/format";
-import { SectionCard } from "../SectionCard";
+import { NotConnected, SectionCard } from "../SectionCard";
 import TrendArea from "../TrendArea";
 
 const FLOOR = 300_000;
 
-export function CashForecast({ f }: { f: Financials }) {
-  const weeks = f.cashForecast;
+export function CashForecast({ f }: { f: Financials | null }) {
+  const weeks = f?.cashForecast ?? [];
+  if (weeks.length === 0)
+    return (
+      <SectionCard title="Cash outlook">
+        <NotConnected what="cash forecast" />
+      </SectionCard>
+    );
   const min = weeks.reduce((m, w) => (w.balance < m.balance ? w : m), weeks[0]);
   const data = weeks.map((w) => ({ label: w.label, value: w.balance }));
   const tight = min.balance < FLOOR;

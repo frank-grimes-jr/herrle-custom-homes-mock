@@ -1,6 +1,6 @@
 import type { Pipeline } from "@/lib/data/types";
 import { fmtUSD, fmtPct } from "@/lib/format";
-import { SectionCard } from "./SectionCard";
+import { NotConnected, SectionCard } from "./SectionCard";
 import { StatTile } from "./StatTile";
 
 const stageLabel: Record<Pipeline["opportunities"][number]["stage"], string> = {
@@ -9,7 +9,13 @@ const stageLabel: Record<Pipeline["opportunities"][number]["stage"], string> = {
   contract: "Contract",
 };
 
-export function PipelineSection({ p }: { p: Pipeline }) {
+export function PipelineSection({ p }: { p: Pipeline | null }) {
+  if (!p)
+    return (
+      <SectionCard title="Pipeline">
+        <NotConnected what="pipeline data" />
+      </SectionCard>
+    );
   const weighted = p.opportunities.reduce((s, o) => s + (o.estValue * o.probability) / 100, 0);
 
   return (
