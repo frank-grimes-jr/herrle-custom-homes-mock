@@ -116,3 +116,8 @@ test("escalate items sort before watch items", () => {
   assert.deepEqual(sev, [...sev].sort((a, b) => (a === "escalate" ? -1 : 1) - (b === "escalate" ? -1 : 1)));
   assert.equal(sev[0], "escalate");
 });
+
+test("unconnected sources (null / empty) raise no alerts", () => {
+  const out = deriveAttention({ financials: null, projects: [], clients: [], team: null, signatures: [], subs: [] });
+  assert.deepEqual(out, []);
+});

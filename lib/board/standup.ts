@@ -1,12 +1,12 @@
 // Client-safe deterministic standup builder (no SDK, no server-only), so the
-// board can generate a standup entirely in the browser on the static site.
+// board can generate a standup entirely in the browser.
 // Pulls cards from the "active" lanes plus the dashboard's top escalations.
 import type { Board, Standup, StandupTopic } from "./types";
 import type { AttentionItem } from "../data/types";
 
 const PARKED = /idea|someday|landed|done|archive/i;
 
-export function sampleStandup(board: Board, attention: AttentionItem[]): Standup {
+export function buildStandup(board: Board, attention: AttentionItem[]): Standup {
   const topics: StandupTopic[] = [];
 
   for (const lane of board.lanes) {
@@ -26,7 +26,7 @@ export function sampleStandup(board: Board, attention: AttentionItem[]): Standup
   }
 
   return {
-    source: "sample",
+    source: "basic",
     generatedAt: new Date().toISOString(),
     intro: `${topics.length} things worth putting in front of the team: a few efforts in motion and the escalations from this week's numbers.`,
     topics,

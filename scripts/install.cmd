@@ -74,6 +74,27 @@ rem The previous setup's git checkout (identified by its old updater) is no long
 if exist "%USERPROFILE%\HerrleDashboard\scripts\update.mjs" rmdir /s /q "%USERPROFILE%\HerrleDashboard"
 if exist "%TEMP%\%ASSET%" del "%TEMP%\%ASSET%"
 
+rem Claude runs through this PC's Claude Code sign-in (no API key). Install the
+rem CLI if missing, then sign in once - it keeps itself signed in after that.
+set "CLAUDE=%USERPROFILE%\.local\bin\claude.exe"
+if not exist "%CLAUDE%" (
+  echo Installing Claude Code...
+  "%CURL%" -fsSL -o "%TEMP%\claude-install.cmd" https://claude.ai/install.cmd && call "%TEMP%\claude-install.cmd"
+  del "%TEMP%\claude-install.cmd" >nul 2>&1
+)
+if not exist "%CLAUDE%" (
+  echo   Claude Code didn't install. The Inbox shows a plain list until it's installed and signed in.
+  goto :start
+)
+rem ponytail: status only checks a sign-in exists, not that it's still valid; an
+rem expired one surfaces in Admin ("Open Claude Code ... and sign in").
+"%CLAUDE%" auth status | findstr /r /c:"loggedIn.: true" >nul && goto :start
+echo.
+echo   One-time step: sign in to Claude in the browser window that opens.
+echo.
+"%CLAUDE%" auth login
+
+:start
 echo Starting...
 rem Via Explorer so the app runs as the normal (non-admin) user, same as at sign-in.
 explorer.exe "%APP%\HerrleDashboard.exe"

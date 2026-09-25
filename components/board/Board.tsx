@@ -4,10 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { X, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import type { Board as BoardT, Card, Lane, Standup } from "@/lib/board/types";
 import type { AttentionItem } from "@/lib/data/types";
-import { defaultBoard } from "@/lib/board/mock";
-import { sampleStandup } from "@/lib/board/sample-standup";
+import { buildStandup } from "@/lib/board/standup";
 
 const KEY = "herrle-board-v1";
+// Starting lanes, no cards — Dave fills in his own efforts.
+const LANES = ["Ideas & Someday", "This Quarter", "In Motion", "Waiting On", "Landed"];
+const defaultBoard = (): BoardT => ({
+  lanes: LANES.map((name) => ({ id: name.toLowerCase().replace(/[^a-z]+/g, "-"), name, cards: [] })),
+});
 const newId = () =>
   typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `id-${Date.now()}-${Math.random()}`;
 
@@ -161,11 +165,9 @@ export function Board({ attention }: { attention: AttentionItem[] }) {
     }
   };
 
-  // Static site → the standup is generated in the browser from the current
-  // board + the dashboard's escalations. (On a Node host, swap this for a POST
-  // to a route handler that calls Claude — the modal already handles both.)
+  // Built in the browser from the current board + the dashboard's escalations.
   function runStandup() {
-    setStandup(sampleStandup(board, attention));
+    setStandup(buildStandup(board, attention));
     setStandupOpen(true);
   }
 

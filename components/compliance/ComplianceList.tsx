@@ -1,6 +1,6 @@
 import type { Sub } from "@/lib/data/types";
 import { fmtDate } from "@/lib/format";
-import { SectionCard } from "../SectionCard";
+import { NotConnected, SectionCard } from "../SectionCard";
 
 const DAY = 86_400_000;
 const SOON_DAYS = 45;
@@ -15,6 +15,7 @@ function coiStatus(iso: string) {
 export function ComplianceList({ subs }: { subs: Sub[] }) {
   return (
     <SectionCard title="Subcontractors" right={`${subs.length} active`}>
+      {subs.length === 0 && <NotConnected what="subcontractor records" />}
       <ul className="divide-y divide-line">
         {subs.map((s) => {
           const coi = coiStatus(s.coiExpires);

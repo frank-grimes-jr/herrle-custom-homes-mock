@@ -12,6 +12,8 @@ import { getAnalysisSettings, DEFAULT_SETTINGS } from "@/lib/settings";
 export const dynamic = "force-dynamic"; // reflect live vault state on every request
 
 const PRIMARY = "rounded-lg bg-primary px-3 py-1.5 text-sm text-canvas hover:opacity-90";
+// Google hides this page from the Security menu; the direct link is the only reliable way in.
+const APP_PASSWORDS_URL = "https://myaccount.google.com/apppasswords";
 
 const MESSAGES: Record<string, string> = {
   connected: "connected.",
@@ -20,6 +22,12 @@ const MESSAGES: Record<string, string> = {
   not_configured: "needs credentials first.",
   error: "couldn’t connect. Please check the details and try again.",
   saved: "settings saved.",
+  // Email login failures — Gmail's reason, in plain words.
+  bad_login: "sign-in was rejected. Check the Gmail address and the 16-character App Password.",
+  app_password_required:
+    "needs an App Password, not your regular Google password — create one at myaccount.google.com/apppasswords.",
+  google_blocked: "sign-in was blocked by Google. Open Gmail in a browser, confirm it was you, then try again.",
+  unreachable: "couldn’t reach Gmail. Check the internet connection and try again.",
 };
 const PROVIDER_NAMES: Record<string, string> = {
   email: "Email",
@@ -90,8 +98,17 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 className="mt-3 grid gap-3 sm:max-w-md"
               >
                 <p className="text-sm text-muted">
-                  Enter your Gmail address and a 16-character <strong>App Password</strong>{" "}
-                  (Google Account → Security → App passwords; requires 2-Step Verification).
+                  Enter your Gmail address and a 16-character <strong>App Password</strong> — not
+                  your regular Google password. Create one at{" "}
+                  <a
+                    href={APP_PASSWORDS_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-ink underline underline-offset-2"
+                  >
+                    myaccount.google.com/apppasswords
+                  </a>{" "}
+                  (2-Step Verification must be on first).
                 </p>
                 <label className="grid gap-1 text-sm">
                   <span className="text-muted">Gmail address</span>

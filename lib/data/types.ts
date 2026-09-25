@@ -1,5 +1,5 @@
 // Domain types for the dashboard. Every adapter in ./index.ts returns these,
-// whether the data is mock (now) or live (later) — so the UI never changes.
+// null / [] until that source is connected — so the UI never changes.
 
 export type Money = number; // USD
 export type TrendPoint = { label: string; value: number };
@@ -152,11 +152,11 @@ export type AttentionItem = {
 
 export type DashboardData = {
   asOf: string;
-  financials: Financials;
+  financials: Financials | null; // null = no source connected
   projects: Project[];
   clients: Client[];
-  pipeline: Pipeline;
-  team: Team;
+  pipeline: Pipeline | null;
+  team: Team | null;
   signatures: SignatureDoc[];
   attention: AttentionItem[];
 };

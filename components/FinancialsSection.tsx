@@ -1,10 +1,16 @@
 import type { Financials } from "@/lib/data/types";
 import { fmtUSD, fmtPct, fmtDelta, runwayMonths } from "@/lib/format";
-import { SectionCard } from "./SectionCard";
+import { NotConnected, SectionCard } from "./SectionCard";
 import { StatTile } from "./StatTile";
 import TrendArea from "./TrendArea";
 
-export function FinancialsSection({ f }: { f: Financials }) {
+export function FinancialsSection({ f }: { f: Financials | null }) {
+  if (!f)
+    return (
+      <SectionCard title="Financial health">
+        <NotConnected what="financial data" />
+      </SectionCard>
+    );
   const delta = fmtDelta(f.revenueYTD, f.revenuePriorYTD);
   const runway = runwayMonths(f.cashOnHand, f.monthlyBurn);
   const arRows: { label: string; value: number; over?: boolean }[] = [

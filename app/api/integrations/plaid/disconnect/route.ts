@@ -1,8 +1,8 @@
 import "server-only";
-import { NextResponse } from "next/server";
 import { disconnectPlaid } from "@/lib/plaid";
+import { redirectTo } from "@/lib/redirect";
 
-export async function POST(request: Request) {
+export async function POST() {
   disconnectPlaid();
-  return NextResponse.redirect(new URL("/admin?plaid=disconnected", request.url), { status: 303 });
+  return redirectTo("/admin?plaid=disconnected");
 }

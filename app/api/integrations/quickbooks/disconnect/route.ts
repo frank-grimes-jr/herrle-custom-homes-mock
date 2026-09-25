@@ -1,8 +1,8 @@
 import "server-only";
-import { NextResponse } from "next/server";
 import { disconnectQuickBooks } from "@/lib/quickbooks";
+import { redirectTo } from "@/lib/redirect";
 
-export async function POST(request: Request) {
+export async function POST() {
   disconnectQuickBooks();
-  return NextResponse.redirect(new URL("/admin?quickbooks=disconnected", request.url), { status: 303 });
+  return redirectTo("/admin?quickbooks=disconnected");
 }
