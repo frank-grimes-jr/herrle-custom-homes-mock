@@ -5,7 +5,7 @@ import { SectionCard } from "@/components/SectionCard";
 import { PlaidConnect } from "@/components/admin/PlaidConnect";
 import { Analyze } from "@/components/admin/Analyze";
 import { isEmailConfigured } from "@/lib/email";
-import { isQuickBooksConfigured, isQuickBooksConnected } from "@/lib/quickbooks";
+import { isQuickBooksConfigured, isQuickBooksConnected, QBO_REDIRECT_URI, QBO_START_URL } from "@/lib/quickbooks";
 import { isPlaidConfigured, isPlaidConnected } from "@/lib/plaid";
 import { getAnalysisSettings, DEFAULT_SETTINGS } from "@/lib/settings";
 
@@ -128,7 +128,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             {qbo.connected ? (
               <DisconnectForm action="/api/integrations/quickbooks/disconnect" />
             ) : qbo.configured ? (
-              <a href="/api/integrations/quickbooks/start" className={PRIMARY}>
+              <a href={QBO_START_URL} className={PRIMARY}>
                 Connect QuickBooks
               </a>
             ) : (
@@ -160,7 +160,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               <SetupForm
                 title="QuickBooks"
                 action="/api/integrations/quickbooks/config"
-                redirectUri="http://localhost:3000/api/integrations/quickbooks/callback"
+                redirectUri={QBO_REDIRECT_URI}
                 note="OAuth client from your Intuit developer app."
                 fields={[
                   { name: "clientId", label: "Client ID" },

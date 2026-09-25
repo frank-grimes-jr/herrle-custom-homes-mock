@@ -19,6 +19,13 @@ export const QBO_SCOPE = "com.intuit.quickbooks.accounting";
 export const QBO_REDIRECT_URI =
   process.env.QBO_REDIRECT_URI ?? "http://localhost:3000/api/integrations/quickbooks/callback";
 
+// Intuit only allows http redirects on localhost, so the whole OAuth round trip
+// (start sets the state cookie, callback reads it) runs on QBO_REDIRECT_URI's
+// origin; cookies don't cross origins. The callback then sends Dave back to his
+// everyday address — the one scripts/install.cmd maps to this machine.
+export const QBO_START_URL = new URL("/api/integrations/quickbooks/start", QBO_REDIRECT_URI).href;
+export const APP_URL = process.env.APP_URL ?? "http://herrle.internal";
+
 export function isQuickBooksConfigured(): boolean {
   return !!getSecret(QBO_CLIENT_ID) && !!getSecret(QBO_CLIENT_SECRET);
 }
