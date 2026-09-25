@@ -1,7 +1,6 @@
 // lib/analysis/enrich.ts
 // Node-testable module: no "server-only", relative .ts imports (see Global Constraints).
-import Anthropic from "@anthropic-ai/sdk";
-import { getSecret, ANTHROPIC_KEY } from "../secrets.ts";
+import { askClaude, SIGN_IN_HINT } from "../claude.ts";
 import { getAnalysisSettings } from "../settings.ts";
 import type { ThreadSummary, EnrichedThread } from "./types.ts";
 
@@ -36,22 +35,20 @@ function compact(threads: ThreadSummary[]) {
 }
 
 export async function enrichThreads(threads: ThreadSummary[]): Promise<EnrichedThread[]> {
-  const apiKey = getSecret(ANTHROPIC_KEY) ?? process.env.ANTHROPIC_API_KEY;
-  if (!apiKey || threads.length === 0) return applyEnrichment(threads, { threads: [] });
+  if (threads.length === 0) return [];
   try {
-    const client = new Anthropic({ apiKey });
-    const res = await client.messages.create({
+    const text = await askClaude({
       model: getAnalysisSettings().enrichModel,
-      max_tokens: 4000,
       system: SYSTEM,
-      messages: [{ role: "user", content: JSON.stringify(compact(threads)) }],
+      prompt: JSON.stringify(compact(threads)),
     });
-    const text = res.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
     const start = text.indexOf("{");
     const end = text.lastIndexOf("}");
     const parsed = start >= 0 && end >= 0 ? JSON.parse(text.slice(start, end + 1)) : { threads: [] };
     return applyEnrichment(threads, parsed);
   } catch (err) {
+    // Signed out = nothing downstream can work; say so instead of "no findings".
+    if (err instanceof Error && err.message === SIGN_IN_HINT) throw err;
     console.error("[analysis] enrichment failed; using neutral defaults:", err);
     return applyEnrichment(threads, { threads: [] });
   }

@@ -1,47 +1,58 @@
 # Installing the Herrle Dashboard on Dave's laptop
 
-This app runs **locally** on Dave's Windows laptop and **updates itself**. You
-never "deploy" a release: you merge to `main`, and his laptop pulls the change
-(once CI is green), rebuilds, and restarts on its own. Dave just opens
-**http://herrle.internal** — no port, no terminal, nothing to click.
+The app runs **locally** on Dave's Windows laptop and **keeps itself up to
+date without him noticing**. There are no console windows, no scheduled builds,
+and no Node, Git or npm on his machine.
 
-Setup is **one time** and uses a plain **`.cmd`** file (not PowerShell), so a
-disabled PowerShell script policy can't block it. Node does the real work.
+- **You merge to `main`.** GitHub Actions ([`release.yml`](.github/workflows/release.yml))
+  tests and builds the app, boots the packaged result as a smoke test, and
+  publishes it as a GitHub Release (`build-N`).
+- **The laptop runs one hidden background app.** `HerrleDashboard.exe` starts at
+  sign-in and runs the prebuilt server, which serves **http://herrle.internal**.
+  Every 30 minutes it checks for a newer release. When it finds one, it
+  downloads it, verifies the checksum, unpacks it beside the current version,
+  and restarts into it (about a 2-second blip).
 
----
+## What Dave's laptop needs
 
-## Install (once, on Dave's laptop)
+- Windows 10 (1803+) or 11. The built-in `curl` and `tar` do the downloading.
+- **Claude Code installed and signed in.** The Inbox briefs and the Analysis run
+  through that sign-in (`claude -p`, headless and windowless), so no API key is
+  needed. If he's signed out, Admin → *Analyze now* says **"Open Claude Code on
+  this computer and sign in"**, and the Inbox shows a plain message list until
+  he does.
+- Admin rights **once**, for the `herrle.internal` name and the port-80 mapping.
 
-1. Copy `scripts\install.cmd` and the repo's `scripts\setup-local.mjs` onto the
-   laptop — or just copy `install.cmd` (it clones the repo, which brings the rest).
-2. **Right-click `install.cmd` → "Run as administrator."** (Admin is needed once
-   for the hostname + port-80 mapping.)
-3. It runs unattended:
-   - installs **Node LTS** and **Git** via `winget` (skips if present),
-   - clones the repo to `%USERPROFILE%\HerrleDashboard` — a **GitHub sign-in window opens
-     the first time** if the repo is private; sign in once and Git remembers it
-     for the automatic updates,
-   - runs `setup-local.mjs`, which maps `herrle.internal` → `127.0.0.1`, forwards
-     port **80 → 3000** (so the URL has no port and the app runs unprivileged),
-     builds once, prompts for the **Anthropic API key** (hidden; stored in the OS
-     vault; blank to skip), and registers the **scheduled tasks** (start at logon
-     + self-update every 5 minutes).
+## Install (once)
 
-When it finishes, open **http://herrle.internal**.
+1. Get `install.cmd`. It's attached to every release:
+   `https://github.com/frank-grimes-jr/herrle-custom-homes-mock/releases/latest/download/install.cmd`
+   (or copy `scripts\install.cmd`). For an offline install, put
+   `herrle-dashboard-win-x64.zip` from a release in the same folder.
+2. **Right-click `install.cmd` → "Run as administrator."** If SmartScreen says
+   *"Windows protected your PC"*, choose *More info → Run anyway*. It's a plain,
+   readable batch file.
+3. It runs unattended, with no questions:
+   - downloads the latest build (~45 MB) into `%LOCALAPPDATA%\HerrleDashboard\app`,
+   - maps `herrle.internal` → `127.0.0.1` and forwards port **80 → 3000**,
+   - registers the hidden launcher to start at sign-in (it shows as
+     *HerrleDashboard* in Task Manager → Startup apps),
+   - starts it and opens **http://herrle.internal**.
 
-> No manual GitHub token needed: the first `git clone` uses Git Credential
-> Manager's secure sign-in and stores the result for unattended auto-pull. (If
-> you prefer, you can still pre-seed a read-only fine-grained token.)
+Running it again is safe; use it to repair or reinstall. It also removes the
+previous git + npm setup (its two scheduled tasks and its
+`%USERPROFILE%\HerrleDashboard` checkout).
 
 ## Connect the data sources
 
-**Email** needs no provider registration: on the ⚙ Admin page Dave enters his
+**Email** needs no provider registration. On the ⚙ Admin page, Dave enters his
 Gmail address and a 16-character **App Password** (Google Account → Security →
-App passwords; requires 2-Step Verification). Read-only over IMAP — no Google
-Cloud project. The dashboard verifies the login before saving.
+App passwords; requires 2-Step Verification). Access is read-only over IMAP,
+with no Google Cloud project, and the dashboard verifies the login before
+saving.
 
-**QuickBooks** and **Bank (Plaid)** need a one-time app registration by you, then
-Dave connects with one click:
+**QuickBooks** and **Bank (Plaid)** each need a one-time app registration by
+you; after that, Dave connects with one click:
 
 | Provider | Redirect URI to register | Where |
 |---|---|---|
@@ -49,7 +60,9 @@ Dave connects with one click:
 | Bank (Plaid) | — (Plaid Link, no redirect) | Plaid dashboard (start in **Sandbox**) |
 
 Paste each provider's client id/secret once under **Developer setup** on the
-Admin page; those blocks then disappear and Dave sees only Connect / Disconnect.
+Admin page. Those blocks then disappear, and Dave sees only Connect / Disconnect.
+Credentials live in Windows Credential Manager (service `herrle-dashboard`),
+never in files.
 
 > QuickBooks' connect flow briefly uses `localhost:3000` (Intuit rejects
 > non-`localhost` `http` redirects); the everyday URL stays `herrle.internal`.
@@ -58,25 +71,43 @@ Admin page; those blocks then disappear and Dave sees only Connect / Disconnect.
 
 ## How updates work (nothing for Dave to do)
 
-You merge to `main` → the `build-check` workflow runs → the laptop's scheduled
-task (`scripts/update.mjs`) sees the new **green** commit within 5 min, pulls it,
-`npm ci` (only if dependencies changed), `npm run build`, and restarts.
+Merge → `release.yml` publishes `build-N` → within 30 minutes the laptop
+installs it. The previous build stays on disk.
 
-**Protect `main`** with branch protection / required review: a merge to `main`
-runs code on Dave's laptop.
+- **Roll back:** delete the bad release on GitHub's Releases page. The laptop
+  installs whatever is "latest" again on its next check.
+- **Protect `main`** with branch protection / required review: a merge to
+  `main` becomes code running on Dave's laptop.
+- **Keep the repo public, or plan for a token.** The updater downloads releases
+  anonymously. The code holds no secrets (those are in the vault). If the repo
+  goes private, updates stop until the updater is given a read-only token.
+- Pull requests are checked by `build-check.yml`. Only merged, smoke-tested
+  builds are ever published.
 
 ## Checking / troubleshooting
 
-- **Is it running?** Open `http://herrle.internal`, or `schtasks /query /tn "Herrle Dashboard Update"`.
-- **Force an update now:** `node %USERPROFILE%\HerrleDashboard\scripts\update.mjs`
-- **Re-run local setup** (hostname/portproxy/tasks): from an **admin** prompt,
-  `node %USERPROFILE%\HerrleDashboard\scripts\setup-local.mjs`
-- **"node isn't recognized" right after install:** Node was just installed and
-  isn't on PATH yet — close the window and run `install.cmd` again (as admin); it
-  skips the install and finishes.
-- **Port 80 in use** (IIS / another app): free port 80, or change `PORT`/the
-  portproxy and use `herrle.internal:<port>`.
+- **Which version is he on?** The bottom of the Admin page shows `Version build-N`.
+- **Logs:** `%LOCALAPPDATA%\HerrleDashboard\logs\app.log` (updates, restarts, errors).
+- **Not running?** Sign out and back in, or double-click
+  `%LOCALAPPDATA%\HerrleDashboard\app\HerrleDashboard.exe`.
 - **Nothing at herrle.internal:** check the hosts entry and
   `netsh interface portproxy show all`.
-- **PowerShell blocked?** Not used here — everything runs through `install.cmd`
-  (batch) and Node.
+- **Port 80 in use** (IIS / another app): free port 80, or browse to
+  `http://herrle.internal:3000`.
+- **Uninstall:** from an admin prompt:
+  ```bat
+  reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v HerrleDashboard /f
+  taskkill /f /im HerrleDashboard.exe
+  netsh interface portproxy delete v4tov4 listenport=80 listenaddress=127.0.0.1
+  rmdir /s /q "%LOCALAPPDATA%\HerrleDashboard\app"
+  ```
+  Then remove the `herrle.internal` line from `C:\Windows\System32\drivers\etc\hosts`.
+  Settings and findings live in `%LOCALAPPDATA%\HerrleDashboard`; credentials
+  are in Credential Manager under `herrle-dashboard`.
+
+## Building a release locally (developers)
+
+```bash
+npm run build
+node scripts/package-release.mjs local-1   # → dist/herrle-dashboard-win-x64.zip (+ .sha256)
+```

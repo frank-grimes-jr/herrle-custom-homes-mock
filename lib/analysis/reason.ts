@@ -1,7 +1,6 @@
 // lib/analysis/reason.ts
 // Node-testable module: no "server-only", relative .ts imports (see Global Constraints).
-import Anthropic from "@anthropic-ai/sdk";
-import { getSecret, ANTHROPIC_KEY } from "../secrets.ts";
+import { askClaude } from "../claude.ts";
 import { getAnalysisSettings } from "../settings.ts";
 import { validateFindings } from "../signals.ts";
 import type { EnrichedThread, Finding } from "./types.ts";
@@ -27,19 +26,13 @@ export function buildUserPrompt(threads: EnrichedThread[]): string {
 export async function reason(threads: EnrichedThread[]): Promise<Finding[]> {
   const salient = threads.filter((t) => t.salient);
   if (salient.length === 0) return [];
-  const apiKey = getSecret(ANTHROPIC_KEY) ?? process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return [];
-  const { reasonModel, systemPrompt, maxTokens } = getAnalysisSettings();
-  const client = new Anthropic({ apiKey });
-  const res = await client.messages.create({
+  const { reasonModel, systemPrompt } = getAnalysisSettings();
+  const text = await askClaude({
     model: reasonModel,
-    max_tokens: maxTokens,
-    thinking: { type: "adaptive" }, // explicit: 4.8 runs without it if omitted
-    output_config: { effort: "high" }, // explicit: 5.5 defaults to medium
     system: systemPrompt,
-    messages: [{ role: "user", content: buildUserPrompt(salient) }],
+    prompt: buildUserPrompt(salient),
+    effort: "high", // explicit: 5.5 defaults to medium
   });
-  const text = res.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
   const parsed = start >= 0 && end >= 0 ? JSON.parse(text.slice(start, end + 1)) : { findings: [] };

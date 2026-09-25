@@ -22,9 +22,10 @@ All figures and inboxes are **synthetic sample data**.
 ## Live AI (optional)
 
 The Inbox briefs and the standup ship with deterministic **sample** output so
-the site works with zero setup. On a Node host (e.g. Vercel), set
-`ANTHROPIC_API_KEY` and those become genuinely Claude-written. GitHub Pages is
-static, so the hosted site always shows the samples.
+the site works with zero setup. In the local app, the briefs and the Analysis
+are written by Claude through the computer's **Claude Code sign-in** (the
+`claude` CLI, run headless) — no API key. GitHub Pages is static, so the hosted
+site always shows the samples.
 
 ## Run locally
 
